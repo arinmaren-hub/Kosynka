@@ -18,19 +18,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE: тихий ночной инструмент для вязания, ничего лишнего
-   IDEA: счётчик рядов на спице, только сам считает петли
+   IDEA: счётчик рядов на спице, только сам считает петли и время
    PICTURE: большая круглая кнопка с кольцом прогресса петель в ряду
    COLOUR and TYPE: чистый чёрный; розовая шерсть для рядов с прибавками, мятная для рядов без; Unbounded для цифр, Manrope для текста
-   LAYOUT: одна колонка: ряд и тип → кнопка → действия → следующий ряд → история → настройки */
+   LAYOUT: одна колонка: часики → ряд и тип → кнопка → действия → следующий ряд → время → история по дням → настройки */
 :root{color-scheme:dark;--bg:#000;--ink:#f2f2f2;--mute:#8c8c8c;--line:#1f1f1f;--panel:#0d0d0d;--inc:#ff8a9b;--none:#9fd8c6}
 *{box-sizing:border-box;min-width:0}
 html,body{background:#000;overscroll-behavior:none}
 body{--acc:var(--inc);margin:0;color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
 body.no{--acc:var(--none)}
 main{max-width:480px;margin:0 auto;padding:20px 18px calc(56px + env(safe-area-inset-bottom))}
-.top{display:flex;justify-content:space-between;align-items:baseline;gap:6px 12px;flex-wrap:wrap;margin-bottom:22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;margin-bottom:18px}
 .title{font:700 15px Unbounded,sans-serif}
-.scheme{color:var(--mute);font-size:13px}
+.clock{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 15px Manrope,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;touch-action:manipulation}
+.clock i{width:8px;height:8px;border-radius:50%;background:#555}
+.clock small{color:var(--mute);font-size:13px;font-weight:400}
+.clock.on i{background:var(--inc);animation:pulse 1.6s infinite}
+.clock.on small{display:none}
+@keyframes pulse{50%{opacity:.3}}
 .now{text-align:center}
 .lbl{color:var(--mute);font-size:13px}
 .rownum{font:700 44px/1.05 Unbounded,sans-serif;margin:4px 0 14px}
@@ -50,15 +55,22 @@ main{max-width:480px;margin:0 auto;padding:20px 18px calc(56px + env(safe-area-i
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn{min-height:52px;border-radius:14px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 16px Manrope,sans-serif;cursor:pointer;touch-action:manipulation}
 .btn:disabled{opacity:.35}
-.btn:focus-visible,.tap:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
-.next{margin:18px 0 30px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.btn:focus-visible,.tap:focus-visible,.clock:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.next{margin:18px 0 26px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
 .next small{display:block;color:var(--mute);font-size:13px}
 .i{color:var(--inc)}.n{color:var(--none)}
-h2{font:700 15px Unbounded,sans-serif;margin:0 0 6px}
+.stats{margin:0 0 26px}
+.big{font:700 32px/1.1 Unbounded,sans-serif;margin:4px 0 8px;font-variant-numeric:tabular-nums}
+.stats p{margin:0 0 6px}
+.note{color:var(--mute);font-size:13px}
+h2{font:700 15px Unbounded,sans-serif;margin:0 0 2px}
 ol{list-style:none;margin:0;padding:0}
-li{display:grid;grid-template-columns:minmax(0,1fr) auto 6.5em;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+li{display:grid;grid-template-columns:minmax(0,1fr) auto 6.5em;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
 li b{font-weight:700}
-li span:last-child{text-align:right;white-space:nowrap}
+li small{display:block;color:var(--mute);font-size:13px;font-weight:400}
+li>span:last-child{text-align:right;white-space:nowrap}
+li.day{grid-template-columns:minmax(0,1fr) auto;padding:18px 0 6px;color:var(--mute);font-size:13px;border-bottom-color:#333}
+li.day span:first-child{color:var(--ink);font-weight:600}
 li.start{color:var(--mute)}
 details{margin-top:28px;border-top:1px solid var(--line);padding-top:6px}
 summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-items:center}
@@ -70,12 +82,15 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
 .confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:15px}
 .confirm .btn{min-height:44px;padding:0 18px}
 .danger{border-color:#5a2a30;color:var(--inc)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <main>
-  <div class="top"><span class="title">Косынка</span><span class="scheme" id="scheme">3 ряда с прибавками, 1 без</span></div>
+  <div class="top">
+    <span class="title">Косынка</span>
+    <button class="clock" id="clock" aria-label="Пауза или продолжить время"><i></i><span id="clockT">0:00:00</span><small>пауза</small></button>
+  </div>
 
   <section class="now">
     <div class="lbl">Сейчас вяжешь</div>
@@ -99,6 +114,13 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
 
   <div class="next" id="next"></div>
 
+  <section class="stats">
+    <div class="lbl">Всего вязания</div>
+    <div class="big" id="total">0 мин</div>
+    <p id="tinfo"></p>
+    <p class="note">Время идёт, пока вяжешь: включается от любого нажатия и само встаёт на паузу через 30 минут без нажатий. Паузу можно поставить на часиках сверху.</p>
+  </section>
+
   <h2>История</h2>
   <ol id="hist"></ol>
 
@@ -114,7 +136,10 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
       <label>Начать с ряда <input id="sRow" type="number" inputmode="numeric" min="1"></label>
       <label>Петель в прошлом ряду <input id="sPrev" type="number" inputmode="numeric" min="0"></label>
       <button class="btn danger" id="reset">Начать с этого места</button>
-      <div class="confirm" id="confirm" hidden>История сотрётся. Точно?
+      <p>История рядов сотрётся, общее время останется.</p>
+      <h3>Время</h3>
+      <button class="btn danger" id="resetTime">Обнулить время</button>
+      <div class="confirm" id="confirm" hidden><span id="confirmT">Точно?</span>
         <button class="btn" id="yes">Да</button><button class="btn" id="no">Нет</button>
       </div>
     </div>
@@ -124,7 +149,8 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
 <script>
 {
   const KEY = 'kosynka-v1';
-  const DEF = {startRow:20, startPrev:32, inc:2, anchor:21, period:4, done:[], cur:0};
+  const IDLE = 30 * 60 * 1000;
+  const DEF = {startRow:20, startPrev:32, inc:2, anchor:21, period:4, done:[], cur:0, total:0, run:null, last:0, rowStart:0, began:0};
   let S = Object.assign({}, DEF);
   try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign({}, DEF, JSON.parse(raw)); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
@@ -133,11 +159,51 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
   const pl = (n, f) => { const a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b > 1 && b < 5 ? f[1] : f[2]; };
   const st = n => n + ' ' + pl(n, ['петля', 'петли', 'петель']);
   const pr = n => '+' + n + ' ' + pl(n, ['прибавка', 'прибавки', 'прибавок']);
+  const rw = n => n + ' ' + pl(n, ['ряд', 'ряда', 'рядов']);
   const isNo = r => S.period > 0 && (((r - S.anchor) % S.period) + S.period) % S.period === 0;
   const add = r => isNo(r) ? 0 : S.inc;
   const row = () => S.startRow + S.done.length;
   const prev = () => S.done.length ? S.done[S.done.length - 1].count : S.startPrev;
   const C = 2 * Math.PI * 46;
+
+  // время
+  const settle = now => {
+    if (S.run && now - S.last > IDLE) { S.total += Math.max(S.last - S.run, 0); S.run = null; return true; }
+    return false;
+  };
+  const active = now => S.total + (S.run ? Math.max(now - S.run, 0) : 0);
+  function touch(now) {
+    settle(now);
+    if (!S.run) S.run = now;
+    if (!S.began) S.began = now;
+    S.last = now;
+  }
+  const fmtDur = ms => {
+    const m = Math.floor(ms / 60000);
+    if (m < 1) return 'меньше минуты';
+    const h = Math.floor(m / 60), mm = m % 60;
+    return h ? (mm ? `${h} ч ${mm} мин` : `${h} ч`) : `${m} мин`;
+  };
+  const fmtClock = ms => {
+    const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+    return `${h}:${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  };
+  const dayKey = t => new Date(t).toDateString();
+  const dayLabel = t => {
+    const k = dayKey(t), now = Date.now();
+    if (k === dayKey(now)) return 'Сегодня';
+    if (k === dayKey(now - 864e5)) return 'Вчера';
+    return new Date(t).toLocaleDateString('ru-RU', {weekday:'short', day:'numeric', month:'long'});
+  };
+  const dateFull = t => new Date(t).toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
+  const hm = t => new Date(t).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+
+  function paintTime(now) {
+    const ms = active(now);
+    $('clockT').textContent = fmtClock(ms);
+    $('clock').classList.toggle('on', !!S.run);
+    $('total').textContent = fmtDur(ms);
+  }
 
   function render() {
     const r = row(), a = add(r), t = prev() + a, n = r + 1, an = add(n);
@@ -149,12 +215,33 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
     $('ring').style.strokeDashoffset = C * (1 - Math.min(S.cur / (t || 1), 1));
     $('next').innerHTML = `<small>Дальше</small>Ряд ${n} · <b class="${an ? 'i' : 'n'}">${an ? pr(an) : 'без прибавок'}</b> · ${st(t + an)}`;
     $('undo').disabled = !S.cur && !S.done.length;
-    const per = S.period;
-    $('scheme').textContent = per > 1 ? `${per - 1} ${pl(per - 1, ['ряд', 'ряда', 'рядов'])} с прибавками, 1 без` : per === 1 ? 'все ряды без прибавок' : 'все ряды с прибавками';
-    const items = S.done.slice().reverse().map(d =>
-      `<li><span>Ряд ${d.row}</span><b class="${d.add ? 'i' : 'n'}">${d.add ? '+' + d.add : 'без'}</b><span>${st(d.count)}</span></li>`);
-    items.push(`<li class="start"><span>Ряд ${S.startRow - 1} · до счётчика</span><b></b><span>${st(S.startPrev)}</span></li>`);
+
+    const timed = S.done.filter(d => d.ms != null);
+    const days = new Set(S.done.filter(d => d.t).map(d => dayKey(d.t))).size;
+    const parts = [];
+    if (S.began) parts.push(`Начала ${dateFull(S.began)}`);
+    if (days > 1) parts.push(`вязала ${days} ${pl(days, ['день', 'дня', 'дней'])}`);
+    if (S.done.length) parts.push(rw(S.done.length));
+    if (timed.length) parts.push(`≈ ${fmtDur(timed.reduce((s, d) => s + d.ms, 0) / timed.length)} на ряд`);
+    $('tinfo').textContent = parts.length ? parts.join(' · ') : 'Время начнёт идти с первого нажатия';
+
+    const groups = [];
+    for (const d of S.done.slice().reverse()) {
+      const key = d.t ? dayKey(d.t) : 'none';
+      let g = groups[groups.length - 1];
+      if (!g || g.key !== key) { g = {key, t:d.t, ms:0, rows:[]}; groups.push(g); }
+      g.rows.push(d); g.ms += d.ms || 0;
+    }
+    const items = [];
+    for (const g of groups) {
+      items.push(`<li class="day"><span>${g.t ? dayLabel(g.t) : 'Без даты'}</span><span>${rw(g.rows.length)}${g.ms ? ' · ' + fmtDur(g.ms) : ''}</span></li>`);
+      for (const d of g.rows) {
+        items.push(`<li><span>Ряд ${d.row}${d.t ? `<small>${hm(d.t)}</small>` : ''}</span><b class="${d.add ? 'i' : 'n'}">${d.add ? '+' + d.add : 'без'}</b><span>${st(d.count)}${d.ms != null ? `<small>${fmtDur(d.ms)}</small>` : ''}</span></li>`);
+      }
+    }
+    items.push(`<li class="start"><span>Ряд ${S.startRow - 1}<small>до счётчика</small></span><b></b><span>${st(S.startPrev)}</span></li>`);
     $('hist').innerHTML = items.join('');
+    paintTime(Date.now());
   }
 
   let ft;
@@ -169,56 +256,85 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
     try { if (!wl && navigator.wakeLock) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } } catch (e) {}
   }
 
-  function completeRow() {
-    const r = row(), a = add(r);
-    S.done.push({row: r, add: a, count: prev() + a});
+  function completeRow(now) {
+    const r = row(), a = add(r), act = active(now);
+    S.done.push({row:r, add:a, count:prev() + a, t:now, ms:Math.max(act - S.rowStart, 0)});
+    S.rowStart = act;
     S.cur = 0;
     flash(`Ряд ${r} готов`);
     buzz([30, 50, 30]);
   }
 
   $('tap').addEventListener('click', () => {
-    wake();
+    const now = Date.now(); touch(now); wake();
     const t = prev() + add(row());
     S.cur++;
-    if (S.cur >= t) completeRow(); else buzz(8);
+    if (S.cur >= t) completeRow(now); else buzz(8);
     save(); render();
   });
 
-  $('finish').addEventListener('click', () => { completeRow(); save(); render(); });
+  $('finish').addEventListener('click', () => { const now = Date.now(); touch(now); completeRow(now); save(); render(); });
 
   $('undo').addEventListener('click', () => {
+    const now = Date.now(); touch(now);
     if (S.cur > 0) S.cur--;
-    else if (S.done.length) { const d = S.done.pop(); S.cur = Math.max(d.count - 1, 0); }
+    else if (S.done.length) { const d = S.done.pop(); S.cur = Math.max(d.count - 1, 0); S.rowStart = Math.max(S.rowStart - (d.ms || 0), 0); }
+    save(); render();
+  });
+
+  $('clock').addEventListener('click', () => {
+    const now = Date.now(); settle(now);
+    if (S.run) { S.total += Math.max(now - S.run, 0); S.run = null; }
+    else { S.run = now; S.last = now; if (!S.began) S.began = now; wake(); }
     save(); render();
   });
 
   const num = (id, min) => { const v = parseInt($(id).value, 10); return Number.isFinite(v) && v >= min ? v : null; };
-  function fillSettings() {
-    $('sInc').value = S.inc; $('sAnchor').value = S.anchor; $('sPeriod').value = S.period;
-    $('sRow').value = row(); $('sPrev').value = prev();
-    noteUpd();
-  }
   function noteUpd() {
     const list = [];
     if (S.period > 0) for (let k = 0; k < 4; k++) list.push(S.anchor + k * S.period);
     $('sNote').textContent = list.length ? `Ряды без прибавок: ${list.join(', ')}…` : 'Рядов без прибавок нет';
+  }
+  function fillSettings() {
+    $('sInc').value = S.inc; $('sAnchor').value = S.anchor; $('sPeriod').value = S.period;
+    $('sRow').value = row(); $('sPrev').value = prev();
+    noteUpd();
   }
   [['sInc', 'inc', 0], ['sAnchor', 'anchor', 1], ['sPeriod', 'period', 0]].forEach(([id, k, min]) => {
     $(id).addEventListener('change', () => { const v = num(id, min); if (v !== null) { S[k] = v; save(); render(); noteUpd(); } else $(id).value = S[k]; });
   });
   $('settings').addEventListener('toggle', () => { if ($('settings').open) fillSettings(); });
 
-  $('reset').addEventListener('click', () => { $('confirm').hidden = false; });
-  $('no').addEventListener('click', () => { $('confirm').hidden = true; });
+  let pending = null;
+  const ask = (what, text) => { pending = what; $('confirmT').textContent = text; $('confirm').hidden = false; };
+  $('reset').addEventListener('click', () => ask('rows', 'История рядов сотрётся. Точно?'));
+  $('resetTime').addEventListener('click', () => ask('time', 'Всё время обнулится. Точно?'));
+  $('no').addEventListener('click', () => { pending = null; $('confirm').hidden = true; });
   $('yes').addEventListener('click', () => {
-    const r = num('sRow', 1), p = num('sPrev', 0);
-    if (r === null || p === null) { $('confirm').hidden = true; return; }
-    S.startRow = r; S.startPrev = p; S.done = []; S.cur = 0;
-    save(); render(); fillSettings(); $('confirm').hidden = true;
-    $('settings').open = false; window.scrollTo({top: 0});
+    const now = Date.now();
+    if (pending === 'rows') {
+      const r = num('sRow', 1), p = num('sPrev', 0);
+      if (r !== null && p !== null) {
+        settle(now);
+        S.startRow = r; S.startPrev = p; S.done = []; S.cur = 0; S.rowStart = active(now);
+        $('settings').open = false; window.scrollTo({top: 0});
+      }
+    } else if (pending === 'time') {
+      S.total = 0; S.run = null; S.last = 0; S.rowStart = 0; S.began = 0;
+      S.done.forEach(d => { delete d.ms; });
+    }
+    pending = null; $('confirm').hidden = true;
+    save(); render(); fillSettings();
   });
 
+  function tick() {
+    const now = Date.now();
+    if (settle(now)) { save(); render(); } else paintTime(now);
+  }
+  setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+
+  if (settle(Date.now())) save();
   render();
 }
 </script>
