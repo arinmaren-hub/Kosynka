@@ -1,5 +1,5 @@
-// v2: время и даты. Страница берётся из сети (если есть), иначе из кэша.
-const CACHE = 'kosynka-v2';
+// v7: замеры, напоминания, заметки, покупки, свои выкройки. Страница берётся из сети (если есть), иначе из кэша.
+const CACHE = 'kosynka-v7';
 const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

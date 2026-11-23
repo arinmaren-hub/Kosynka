@@ -18,94 +18,227 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE: тихий ночной инструмент для вязания, ничего лишнего
-   IDEA: счётчик рядов на спице, только сам считает петли и время
-   PICTURE: большая круглая кнопка с кольцом прогресса петель в ряду
-   COLOUR and TYPE: чистый чёрный; розовая шерсть для рядов с прибавками, мятная для рядов без; Unbounded для цифр, Manrope для текста
-   LAYOUT: одна колонка: часики → ряд и тип → кнопка → действия → следующий ряд → время → история по дням → настройки */
+   IDEA: корзинка с проектами: что вяжу, что в планах, что связано; у каждого — фото, пряжа, этапы, замеры и свой счётчик
+   PICTURE: большая круглая кнопка с кольцом прогресса; фото изделия в карточке проекта
+   COLOUR and TYPE: чистый чёрный; розовая шерсть и мятная как два акцента; Unbounded для цифр, Manrope для текста
+   LAYOUT: три вкладки внизу: Счётчик, Проекты, Покупки; одна колонка */
 :root{color-scheme:dark;--bg:#000;--ink:#f2f2f2;--mute:#8c8c8c;--line:#1f1f1f;--panel:#0d0d0d;--inc:#ff8a9b;--none:#9fd8c6}
 *{box-sizing:border-box;min-width:0}
 html,body{background:#000;overscroll-behavior:none}
 body{--acc:var(--inc);margin:0;color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
 body.no{--acc:var(--none)}
-main{max-width:480px;margin:0 auto;padding:20px 18px calc(56px + env(safe-area-inset-bottom))}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;margin-bottom:18px}
-.title{font:700 15px Unbounded,sans-serif}
-.clock{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 15px Manrope,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;touch-action:manipulation}
+main{max-width:480px;margin:0 auto;padding:20px 18px calc(110px + env(safe-area-inset-bottom))}
+[hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;margin-bottom:18px}
+.title{font:700 15px Unbounded,sans-serif;background:none;border:0;color:var(--ink);padding:8px 0;cursor:pointer;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clock{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 15px Manrope,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;touch-action:manipulation}
 .clock i{width:8px;height:8px;border-radius:50%;background:#555}
 .clock small{color:var(--mute);font-size:13px;font-weight:400}
 .clock.on i{background:var(--inc);animation:pulse 1.6s infinite}
 .clock.on small{display:none}
 @keyframes pulse{50%{opacity:.3}}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:14px;background:var(--panel);border:1px solid var(--line);margin:0 0 18px}
+.seg button{min-height:44px;border:0;border-radius:10px;background:none;color:var(--mute);font:600 14px Manrope,sans-serif;cursor:pointer;touch-action:manipulation;line-height:1.25;padding:6px 4px}
+.seg button small{display:block;font-size:13px;font-weight:400}
+.seg button[aria-pressed=true]{background:#1f1f1f;color:var(--ink)}
 .now{text-align:center}
 .lbl{color:var(--mute);font-size:13px}
-.rownum{font:700 44px/1.05 Unbounded,sans-serif;margin:4px 0 14px}
+.rownum{font:700 clamp(28px,9vw,44px)/1.08 Unbounded,sans-serif;margin:4px 0 14px;text-wrap:balance}
+.ofg{font:600 18px Manrope,sans-serif;color:var(--mute);margin-left:6px}
 .badge{display:inline-block;padding:8px 20px;border-radius:999px;background:var(--acc);color:#000;font-weight:700;font-size:20px;transition:background .25s}
-.tapwrap{display:grid;place-items:center;margin:26px 0 10px}
+.desc{max-width:36ch;margin:0 auto;font-size:16px;text-align:center}
+.desc b{color:var(--acc)}
+.tapwrap{display:grid;place-items:center;margin:24px 0 10px}
 .tap{position:relative;width:min(78vw,300px);aspect-ratio:1;border-radius:50%;border:0;padding:0;background:radial-gradient(circle at 50% 36%,#1d1d1d,#080808 72%);color:var(--ink);font:inherit;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;display:grid;place-items:center;transition:transform .08s}
 .tap:active{transform:scale(.96)}
 .tap svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .track{fill:none;stroke:#1c1c1c;stroke-width:5}
 .ring{fill:none;stroke:var(--acc);stroke-width:5;stroke-linecap:round;stroke-dasharray:289.03;transition:stroke-dashoffset .2s,stroke .25s}
-.count{position:relative;display:grid;justify-items:center;line-height:1}
+.count{position:relative;display:grid;justify-items:center;line-height:1;padding:0 16%}
 .count b{font:700 clamp(56px,18vw,76px)/1 Unbounded,sans-serif}
-.count small{color:var(--mute);font-size:16px;margin-top:12px}
-.flash{position:absolute;inset:12%;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:#000;font:700 20px/1.25 Unbounded,sans-serif;text-align:center;padding:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.count small{color:var(--mute);font-size:15px;margin-top:12px;line-height:1.35;text-align:center}
+.flash{position:absolute;inset:12%;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:#000;font:700 18px/1.25 Unbounded,sans-serif;text-align:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .2s}
 .flash.show{opacity:1}
+.flash.rem{background:#f3d6a0}
 .help{text-align:center;color:var(--mute);font-size:13px;margin:0 0 18px}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{min-height:52px;border-radius:14px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 16px Manrope,sans-serif;cursor:pointer;touch-action:manipulation}
+.btn{min-height:52px;border-radius:14px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 16px Manrope,sans-serif;cursor:pointer;touch-action:manipulation;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;text-align:center;position:relative}
+.btn.sm{min-height:44px;font-size:14px;padding:0 12px;border-radius:12px;flex:none}
 .btn:disabled{opacity:.35}
-.btn:focus-visible,.tap:focus-visible,.clock:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
-.next{margin:18px 0 26px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.btn.pri{background:var(--inc);border-color:var(--inc);color:#000}
+.btn:focus-visible,.tap:focus-visible,.clock:focus-visible,.title:focus-visible,.pcard:focus-visible,.tabs button:focus-visible,.seg button:focus-visible,.sizes button:focus-visible,summary:focus-visible,label:focus-within,.gal button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.next{margin:18px 0 18px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
 .next small{display:block;color:var(--mute);font-size:13px}
+.next .btn{margin-top:10px;width:100%}
 .i{color:var(--inc)}.n{color:var(--none)}
+.card{margin:0 0 18px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.card h2{margin-bottom:4px}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.mrow>div{flex:1}
+.mtxt{font-size:15px;margin:2px 0}
+.mform{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-top:10px;align-items:end}
+.mform label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+.mform input,.inp{font:16px Manrope,sans-serif;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:var(--ink);width:100%}
+.rem li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.rem li:last-child{border-bottom:0}
+.rem li small{display:block;color:var(--mute);font-size:13px}
+.rem li.due{color:#f3d6a0}
+.rem li.due small{color:#f3d6a0}
+.prog{margin:0 0 26px}
+.pbar{margin:0 0 14px}
+.pbar>div{display:flex;justify-content:space-between;gap:10px;font-size:15px}
+.pbar>div span{color:var(--mute);white-space:nowrap}
+.bar{height:8px;border-radius:99px;background:#1c1c1c;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--inc);transition:width .3s}
+.bar.h i{background:var(--none)}
+.chk{display:flex;gap:12px;align-items:flex-start;min-height:44px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px;cursor:pointer}
+.chk input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--inc);flex:none}
+.chk small{display:block;color:var(--mute);font-size:13px}
+#checks .chk input:checked+span{color:var(--mute);text-decoration:line-through}
+.stl{display:grid}
+.stl button{width:100%;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start;text-align:left;padding:10px 0;background:none;border:0;border-bottom:1px solid var(--line);color:var(--ink);font:15px/1.35 Manrope,sans-serif;cursor:pointer;min-height:44px}
+.stl i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1px solid #333;font-size:13px;color:var(--mute)}
+.stl small{display:block;color:var(--mute);font-size:13px}
+.stl .ok{color:var(--mute)}
+.stl .ok i{background:#1c1c1c;color:var(--none);border-color:#1c1c1c}
+.stl .cur i{background:var(--acc);border-color:var(--acc);color:#000;font-weight:700}
+.stl .cur span{font-weight:700}
 .stats{margin:0 0 26px}
 .big{font:700 32px/1.1 Unbounded,sans-serif;margin:4px 0 8px;font-variant-numeric:tabular-nums}
 .stats p{margin:0 0 6px}
-.note{color:var(--mute);font-size:13px}
-h2{font:700 15px Unbounded,sans-serif;margin:0 0 2px}
-ol{list-style:none;margin:0;padding:0}
-li{display:grid;grid-template-columns:minmax(0,1fr) auto 6.5em;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
-li b{font-weight:700}
-li small{display:block;color:var(--mute);font-size:13px;font-weight:400}
-li>span:last-child{text-align:right;white-space:nowrap}
-li.day{grid-template-columns:minmax(0,1fr) auto;padding:18px 0 6px;color:var(--mute);font-size:13px;border-bottom-color:#333}
-li.day span:first-child{color:var(--ink);font-weight:600}
-li.start{color:var(--mute)}
-details{margin-top:28px;border-top:1px solid var(--line);padding-top:6px}
+.note{color:var(--mute);font-size:13px;margin:6px 0}
+.warn{font-size:13px;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px solid #4a3a20;color:#f3d6a0}
+.banner{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 18px;padding:12px 14px;border-radius:14px;border:1px solid #4a3a20;color:#f3d6a0;font-size:14px}
+h1{font:700 28px/1.1 Unbounded,sans-serif;margin:8px 0 18px}
+h2{font:700 15px Unbounded,sans-serif;margin:0 0 8px}
+h3{font-size:13px;color:var(--mute);margin:16px 0 6px;font-weight:600}
+ol,ul{list-style:none;margin:0;padding:0}
+.about{display:grid;grid-template-columns:136px minmax(0,1fr);gap:14px;align-items:start}
+.ph{display:grid;gap:8px}
+.ph img,.noph{width:100%;aspect-ratio:458/709;object-fit:cover;border-radius:12px;background:#111;display:grid;place-items:center;color:#444;font-size:13px}
+.phbtn{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:10px;border:1px solid #2a2a2a;background:var(--panel);font-size:13px;font-weight:600;cursor:pointer;text-align:center;position:relative}
+.what{margin:4px 0 6px;font-size:15px}
+.sizes{display:flex;flex-wrap:wrap;gap:6px}
+.sizes button{min-width:52px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 15px Manrope,sans-serif;cursor:pointer}
+.sizes button[aria-pressed=true]{background:var(--inc);border-color:var(--inc);color:#000}
+.mat li{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.mat li small{display:block;color:var(--mute);font-size:13px}
+.mat li.alt{color:var(--mute)}
+.mat li.ok{color:var(--mute)}
+.plan{margin-bottom:22px}
+.plan .btn.pri{width:100%;margin:18px 0 6px}
+.donebox{margin:0 0 22px;padding:18px 16px;border-radius:16px;border:1px solid var(--none);background:var(--panel)}
+.donebox .big{color:var(--none)}
+details.ab2{margin:0 0 22px;border:1px solid var(--line);border-radius:14px;padding:4px 14px 10px;background:var(--panel)}
+details.ab2 summary{color:var(--ink);font-weight:600}
+.mine{margin:0 0 26px}
+textarea{width:100%;min-height:96px;font:15px/1.45 Manrope,sans-serif;padding:10px 12px;border-radius:12px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);resize:vertical}
+.gal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gal button,.gal label{aspect-ratio:1;border-radius:12px;border:1px solid #2a2a2a;background:#111 center/cover no-repeat;cursor:pointer;padding:0;position:relative;display:grid;place-items:center;color:var(--mute);font:600 13px Manrope,sans-serif;text-align:center}
+.viewer{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.96);display:grid;grid-template-rows:1fr auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.viewer img{width:100%;height:100%;object-fit:contain;min-height:0}
+.vbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding-top:12px;color:var(--mute);font-size:14px}
+#hist li{display:grid;grid-template-columns:minmax(0,1fr) auto 6.5em;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+#hist li b{font-weight:700}
+#hist li small{display:block;color:var(--mute);font-size:13px;font-weight:400}
+#hist li>span:last-child{text-align:right;white-space:nowrap}
+#hist li.day{grid-template-columns:minmax(0,1fr) auto;padding:18px 0 6px;color:var(--mute);font-size:13px;border-bottom-color:#333}
+#hist li.day span:first-child{color:var(--ink);font-weight:600}
+#hist li.day span:last-child{white-space:normal;text-align:right}
+#hist li.start{color:var(--mute);grid-template-columns:1fr}
+#settings{margin-top:28px;border-top:1px solid var(--line);padding-top:6px}
 summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-items:center}
 .set{display:grid;gap:12px;margin:6px 0 10px}
-.set h3{font-size:13px;color:var(--mute);margin:10px 0 0;font-weight:600}
+.set h3{margin:10px 0 0}
 .set label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px}
 .set input{width:5.5em;flex:none;font:16px Manrope,sans-serif;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:var(--ink);text-align:right}
+.set input.wide{width:auto;flex:1;text-align:left}
 .set p{margin:0;color:var(--mute);font-size:13px}
+.sub{display:grid;gap:12px}
+.mlist li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
 .confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:15px}
-.confirm .btn{min-height:44px;padding:0 18px}
+.confirm .btn{min-height:44px}
 .danger{border-color:#5a2a30;color:var(--inc)}
+.plist{display:grid;gap:12px;margin-bottom:22px}
+.pcard{width:100%;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start;text-align:left;padding:14px;border-radius:16px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;touch-action:manipulation}
+.pcard.th{grid-template-columns:58px minmax(0,1fr)}
+.pcard img{width:58px;aspect-ratio:458/709;object-fit:cover;border-radius:8px;background:#111}
+.pcard>div{display:grid;gap:3px}
+.pcard b{font:700 18px/1.2 Unbounded,sans-serif}
+.pcard small{color:var(--mute);font-size:13px}
+.pcard em{font-style:normal;font-size:13px;color:#000;background:var(--inc);border-radius:999px;padding:2px 10px;justify-self:start;font-weight:700}
+.pcard em.d{background:var(--none)}
+.pcard.on{border-color:var(--inc)}
+.add{width:100%}
+.newp{margin-top:6px;padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.newp .seg{margin:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.ed{display:grid;gap:8px;padding:12px;border-radius:12px;border:1px solid #2a2a2a;background:#080808}
+.ed .inp{text-align:left}
+.ed2{display:grid;grid-template-columns:minmax(0,1fr) 6em;gap:8px}
+.ed2 select{font:16px Manrope,sans-serif;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:var(--ink)}
+.ed4{display:flex;gap:8px}
+.ed4 button{min-height:40px;min-width:44px;border-radius:10px;border:1px solid #2a2a2a;background:var(--panel);color:var(--ink);font:600 14px Manrope,sans-serif;cursor:pointer;padding:0 10px}
+.ed4 button:last-child{margin-left:auto;color:var(--inc)}
+.edl{display:grid;gap:10px}
+.bk{display:grid;gap:10px}
+.auto li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.auto li small{display:block;color:var(--mute);font-size:13px}
+.buy li b{font-weight:700}
+.shsz{display:block;margin-top:6px;font:15px Manrope,sans-serif;padding:8px 10px;border-radius:10px;border:1px solid #333;background:#111;color:var(--ink)}
+.stash li{display:grid;grid-template-columns:minmax(0,1fr) 5.5em auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.stash li small{display:block;color:var(--mute);font-size:13px}
+.stash input{font:16px Manrope,sans-serif;padding:8px;border-radius:10px;border:1px solid #333;background:#111;color:var(--ink);text-align:right;width:100%}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(0,0,0,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 12px calc(6px + env(safe-area-inset-bottom))}
+.tabs button{min-height:52px;background:none;border:0;color:var(--mute);font:600 13px Manrope,sans-serif;display:grid;justify-items:center;align-content:center;gap:2px;cursor:pointer;touch-action:manipulation}
+.tabs button[aria-current=page]{color:var(--ink)}
+.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:360px){.about{grid-template-columns:110px minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <main>
+ <section id="vCounter">
   <div class="top">
-    <span class="title">Косынка</span>
+    <button class="title" id="projBtn" aria-label="Открыть проекты"><span id="pName">Косынка</span></button>
     <button class="clock" id="clock" aria-label="Пауза или продолжить время"><i></i><span id="clockT">0:00:00</span><small>пауза</small></button>
   </div>
 
+  <section class="plan" id="planBox" hidden>
+    <div class="lbl">В планах</div>
+    <div id="planAbout"></div>
+    <button class="btn pri" id="startBtn">Начать вязать</button>
+    <p class="note" id="startNote" hidden>Сначала выбери размер.</p>
+    <h2 style="margin-top:22px">Этапы</h2>
+    <ol class="stl" id="planStages"></ol>
+  </section>
+
+  <section class="donebox" id="doneBox" hidden>
+    <div class="lbl">Связано</div>
+    <div class="big" id="doneDate"></div>
+    <p id="doneInfo"></p>
+  </section>
+
+  <div id="counterBox">
+  <div class="seg" id="seg" hidden></div>
+
   <section class="now">
-    <div class="lbl">Сейчас вяжешь</div>
-    <div class="rownum">Ряд <span id="rowNum">20</span></div>
+    <div class="lbl" id="nowLbl">Сейчас вяжешь</div>
+    <div class="rownum"><span id="rowLbl">Ряд</span> <span id="rowNum">20</span><span class="ofg" id="ofGoal"></span></div>
     <div class="badge" id="badge">+2 прибавки</div>
+    <p class="desc" id="desc" hidden></p>
   </section>
 
   <div class="tapwrap">
-    <button class="tap" id="tap" aria-label="Провязала петлю">
+    <button class="tap" id="tap" aria-label="Провязала">
       <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="46"/><circle class="ring" id="ring" cx="50" cy="50" r="46"/></svg>
-      <span class="count"><b id="cur">0</b><small>из <span id="tgt">34</span></small></span>
+      <span class="count"><b id="cur">0</b><small id="curSub">из 34 петель</small></span>
       <span class="flash" id="flash"></span>
     </button>
   </div>
-  <p class="help">Нажимай на каждую петлю — ряд закроется сам</p>
+  <p class="help" id="help">Нажимай на каждую петлю — ряд закроется сам</p>
 
   <div class="acts">
     <button class="btn" id="undo">−1 петля</button>
@@ -114,73 +247,626 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
 
   <div class="next" id="next"></div>
 
+  <section class="card" id="remBox">
+    <h2>Напоминания</h2>
+    <ul class="rem" id="remList"></ul>
+    <details id="remAdd">
+      <summary>+ Добавить напоминание</summary>
+      <form id="remForm" class="set">
+        <label>Что сделать <input class="wide" id="rText" maxlength="70" placeholder="Например, петля для пуговицы"></label>
+        <div class="seg" id="rKind" style="margin:0"><button type="button" data-k="row" aria-pressed="true">В ряду</button><button type="button" data-k="every" aria-pressed="false">Каждые N рядов</button><button type="button" data-k="cm" aria-pressed="false">На см</button></div>
+        <label><span id="rAtL">Номер ряда</span> <input id="rAt" type="text" inputmode="decimal" autocomplete="off" min="0"></label>
+        <label id="rEvL" hidden>Каждые … рядов <input id="rEv" type="number" inputmode="numeric" min="1"></label>
+        <p id="rHint"></p>
+        <button class="btn pri" type="submit">Добавить</button>
+      </form>
+    </details>
+  </section>
+
+  <section class="card" id="measBox">
+    <div class="mrow">
+      <div><h2>Замер</h2><p class="mtxt" id="measTxt"></p><p class="note" id="measSub"></p></div>
+    </div>
+    <form class="mform" id="measForm">
+      <label><span id="measHint">Длина сейчас, см</span><input id="measIn" type="text" inputmode="decimal" autocomplete="off" min="0" placeholder="например, 22,5"></label>
+      <button class="btn sm pri" type="submit">Записать</button>
+    </form>
+  </section>
+
+  <section class="prog" id="prog" hidden>
+    <div id="motifProg">
+      <h2>Прогресс</h2>
+      <div id="bars"></div>
+      <div id="checkWrap">
+        <h2 style="margin-top:18px">Сборка</h2>
+        <div id="checks"></div>
+      </div>
+      <p class="note" id="info"></p>
+    </div>
+    <div id="stageProg">
+      <h2>Этапы</h2>
+      <p class="note">Нажми на этап, чтобы перейти к нему.</p>
+      <ol class="stl" id="stl"></ol>
+    </div>
+  </section>
+
+  <details class="ab2" id="aboutDet" hidden>
+    <summary>О проекте: пряжа, инструменты, размер</summary>
+    <div id="aboutIn"></div>
+  </details>
+  </div>
+
+  <section class="mine" id="mineBox">
+    <h2>Заметки</h2>
+    <textarea id="notes" placeholder="Какие спицы взяла на самом деле, номер партии пряжи, что поменяла…"></textarea>
+    <h2 style="margin-top:18px">Мои фото</h2>
+    <div class="gal" id="gal"></div>
+    <p class="note" id="galMsg"></p>
+  </section>
+
+  <div id="statsBox">
   <section class="stats">
     <div class="lbl">Всего вязания</div>
     <div class="big" id="total">0 мин</div>
     <p id="tinfo"></p>
-    <p class="note">Время идёт, пока вяжешь: включается от любого нажатия и само встаёт на паузу через 30 минут без нажатий. Паузу можно поставить на часиках сверху.</p>
+    <p class="note" id="timeNote">Время идёт, пока вяжешь: включается от любого нажатия и само встаёт на паузу через 30 минут без нажатий. Паузу можно поставить на часиках сверху.</p>
   </section>
 
   <h2>История</h2>
   <ol id="hist"></ol>
+  </div>
 
   <details id="settings">
-    <summary>Настройки и сброс</summary>
+    <summary>Настройки проекта</summary>
     <div class="set">
-      <h3>Схема</h3>
-      <label>Прибавок в ряду <input id="sInc" type="number" inputmode="numeric" min="0"></label>
-      <label>Первый ряд без прибавок <input id="sAnchor" type="number" inputmode="numeric" min="1"></label>
-      <label>Повторять каждые … ряда <input id="sPeriod" type="number" inputmode="numeric" min="0"></label>
-      <p id="sNote"></p>
-      <h3>Начать заново</h3>
-      <label>Начать с ряда <input id="sRow" type="number" inputmode="numeric" min="1"></label>
-      <label>Петель в прошлом ряду <input id="sPrev" type="number" inputmode="numeric" min="0"></label>
-      <button class="btn danger" id="reset">Начать с этого места</button>
-      <p>История рядов сотрётся, общее время останется.</p>
-      <h3>Время</h3>
+      <label>Название <input class="wide" id="sName" type="text" maxlength="40"></label>
+      <div class="sub" id="setRows">
+        <h3>Схема прибавок</h3>
+        <label>Прибавок в ряду <input id="sInc" type="number" inputmode="numeric" min="0"></label>
+        <label>Первый ряд без прибавок <input id="sAnchor" type="number" inputmode="numeric" min="1"></label>
+        <label>Повторять каждые … ряда <input id="sPeriod" type="number" inputmode="numeric" min="0"></label>
+        <p id="sNote"></p>
+        <label>Цель по длине, см <input id="sTcm" type="text" inputmode="decimal" autocomplete="off" min="0" placeholder="—"></label>
+        <h3>Перейти к ряду</h3>
+        <label>Сейчас начинаю ряд <input id="sRow" type="number" inputmode="numeric" min="1"></label>
+        <label>Петель на спицах сейчас <input id="sPrev" type="number" inputmode="numeric" min="0"></label>
+        <button class="btn" id="reset">Перейти к этому ряду</button>
+        <p>История и время сохранятся. Ряды, связанные без счётчика, запишутся в историю одной строкой.</p>
+      </div>
+      <div class="sub" id="setMotif"></div>
+      <div class="sub" id="setMeas">
+        <h3>Плотность и замеры</h3>
+        <label>Моя плотность: рядов на 10 см <input id="sRp" type="text" inputmode="decimal" autocomplete="off" min="0" placeholder="—"></label>
+        <p>Можно не заполнять: после двух замеров в одном этапе плотность посчитается сама.</p>
+        <ul class="mlist" id="measList"></ul>
+      </div>
+      <div class="sub" id="setEdit" hidden>
+        <h3>Этапы выкройки</h3>
+        <label>Плотность выкройки: рядов на 10 см <input id="sCrp" type="text" inputmode="decimal" autocomplete="off" min="0" placeholder="—"></label>
+        <div class="edl" id="sEd"></div>
+        <button class="btn" type="button" id="sEdAdd">+ Этап</button>
+        <button class="btn pri" type="button" id="sEdSave">Сохранить этапы</button>
+      </div>
+      <div class="sub" id="setStages">
+        <button class="btn" id="toPlan">Вернуть в «В планах»</button>
+        <button class="btn danger" id="resetStages">Начать этапы заново</button>
+      </div>
+      <h3>Проект</h3>
+      <button class="btn" id="finishProj">Отметить «Связано»</button>
+      <button class="btn" id="reopen" hidden>Вернуть в работу</button>
       <button class="btn danger" id="resetTime">Обнулить время</button>
+      <button class="btn danger" id="delProj">Удалить проект</button>
       <div class="confirm" id="confirm" hidden><span id="confirmT">Точно?</span>
         <button class="btn" id="yes">Да</button><button class="btn" id="no">Нет</button>
       </div>
     </div>
   </details>
+ </section>
+
+ <section id="vProjects" hidden>
+  <h1>Проекты</h1>
+  <div class="banner" id="bkBanner" hidden><span>Давно не сохраняла резервную копию.</span><button class="btn sm" id="bkBannerBtn">Сохранить</button></div>
+  <h2>Вяжу сейчас</h2>
+  <ol class="plist" id="plist"></ol>
+  <h2 id="planH">В планах</h2>
+  <ol class="plist" id="planList"></ol>
+  <h2 id="doneH">Связано</h2>
+  <ol class="plist" id="doneList"></ol>
+  <button class="btn add" id="addBtn">+ Новый проект</button>
+  <form class="newp set" id="addForm" hidden>
+    <h2>Новый проект</h2>
+    <label>Название <input class="wide" id="nName" type="text" maxlength="40" placeholder="Например, свитер"></label>
+    <div class="seg" id="nType"><button type="button" data-t="rows" aria-pressed="true">Ряды и петли</button><button type="button" data-t="stages" aria-pressed="false">По этапам</button><button type="button" data-t="motifs" aria-pressed="false">Мотивы</button></div>
+    <div class="sub" id="nRows">
+      <label>Начинаю с ряда <input id="nRow" type="number" inputmode="numeric" min="1" value="1"></label>
+      <label>Петель на спицах сейчас <input id="nPrev" type="number" inputmode="numeric" min="0" value="0"></label>
+      <h3>Прибавки (если без них — оставь 0)</h3>
+      <label>Прибавок в ряду <input id="nInc" type="number" inputmode="numeric" min="0" value="0"></label>
+      <label>Первый ряд без прибавок <input id="nAnc" type="number" inputmode="numeric" min="1" value="1"></label>
+      <label>Повторять каждые … ряда <input id="nPer" type="number" inputmode="numeric" min="0" value="0"></label>
+    </div>
+    <div class="sub" id="nSt" hidden>
+      <p>Своя выкройка: перечисли части по порядку. У каждой — цель «до … см» или «… рядов» и короткая заметка.</p>
+      <label>Плотность: рядов на 10 см <input id="nRp" type="text" inputmode="decimal" autocomplete="off" min="0" placeholder="—"></label>
+      <div class="edl" id="nEd"></div>
+      <button class="btn" type="button" id="nEdAdd">+ Этап</button>
+    </div>
+    <div class="sub" id="nMot" hidden>
+      <label>Сколько мотивов связать <input id="nGoal" type="number" inputmode="numeric" min="1" value="20"></label>
+      <label>Кругов в одном мотиве <input id="nR" type="number" inputmode="numeric" min="1" value="4"></label>
+      <p>Для квадратов, бабушкиных квадратов, цветов и других мотивов: считает круги и готовые мотивы.</p>
+    </div>
+    <div class="row2"><button class="btn" type="button" id="addCancel">Отмена</button><button class="btn" type="submit" style="border-color:var(--inc)">Создать</button></div>
+  </form>
+  <label class="btn add" style="margin-top:12px">Добавить фото выкроек<input type="file" accept="image/*" multiple class="vh" id="bulkPhoto"></label>
+  <p class="note" id="bulkMsg">Можно выбрать сразу все фото из папки в «Файлах» — они разложатся по проектам по названиям файлов. Фото хранятся только на этом телефоне.</p>
+
+  <details class="ab2" id="backup" style="margin-top:22px">
+    <summary>Резервная копия и перенос на iPad</summary>
+    <div class="bk">
+      <p class="note">Прогресс хранится в приложении на этом устройстве. Обновление файлов на GitHub его не трогает. Всё сотрётся, только если удалить иконку с экрана «Домой» — на этот случай сохрани копию.</p>
+      <label class="chk"><input type="checkbox" id="bkPh" checked><span>Вместе с фото<small>файл будет больше, зато перенесутся и фото выкроек, и твои</small></span></label>
+      <button class="btn pri" id="bkSave" type="button">Сохранить копию</button>
+      <p class="note">Откроется меню «Поделиться»: выбери «Сохранить в Файлы» (лучше в iCloud Drive) или AirDrop на iPad.</p>
+      <button class="btn" id="bkCopy" type="button">Скопировать копию как текст</button>
+      <h3>Перенос на iPad</h3>
+      <p class="note">1) На iPhone — «Сохранить копию» с фото. 2) На iPad открой тот же адрес приложения в Safari и добавь на экран «Домой». 3) В приложении на iPad: Проекты → Резервная копия → «Из файла копии». Данные на двух устройствах дальше живут отдельно: переносить копию нужно каждый раз, когда переходишь на другое устройство.</p>
+      <h3>Восстановить</h3>
+      <label class="btn">Из файла копии<input type="file" accept=".json,application/json,text/plain" class="vh" id="bkFile"></label>
+      <textarea id="bkText" placeholder="Или вставь сюда скопированный текст копии"></textarea>
+      <button class="btn" id="bkPaste" type="button">Восстановить из текста</button>
+      <h3>Автокопии</h3>
+      <p class="note">Приложение само сохраняет копию раз в несколько часов и перед каждым обновлением (без фото).</p>
+      <ol class="auto" id="autoList"></ol>
+      <div class="confirm" id="bkConfirm" hidden><span id="bkConfirmT">Заменить всё текущее на копию?</span>
+        <button class="btn" id="bkYes" type="button">Да</button><button class="btn" id="bkNo" type="button">Нет</button>
+      </div>
+      <p class="note" id="bkMsg" role="status"></p>
+    </div>
+  </details>
+ </section>
+
+ <section id="vShop" hidden>
+  <h1>Покупки</h1>
+  <h2>Для каких проектов</h2>
+  <div id="shopProj"></div>
+  <h2 style="margin-top:22px">Купить</h2>
+  <ul class="mat buy" id="buyList"></ul>
+  <button class="btn add" id="copyBuy" style="margin-top:12px">Скопировать список</button>
+  <p class="note" id="buyMsg"></p>
+  <h2 style="margin-top:26px">Мой запас пряжи</h2>
+  <ul class="stash" id="stashList"></ul>
+  <details class="ab2" id="stashAdd" style="margin-top:12px">
+    <summary>+ Добавить пряжу в запас</summary>
+    <form id="stashForm" class="set">
+      <label>Пряжа <input class="wide" id="yN" list="yarnNames" placeholder="DROPS Kid-Silk" autocomplete="off"></label>
+      <label>Цвет <input class="wide" id="yC" list="yarnColors" placeholder="цвет 37" autocomplete="off"></label>
+      <label>Сколько, г <input id="yG" type="number" inputmode="numeric" min="0"></label>
+      <button class="btn pri" type="submit">Добавить</button>
+    </form>
+  </details>
+  <datalist id="yarnNames"></datalist><datalist id="yarnColors"></datalist>
+  <h2 style="margin-top:8px">Спицы, крючки и прочее</h2>
+  <p class="note">Отметь, что у тебя уже есть — из списка покупок это уйдёт.</p>
+  <div id="toolList"></div>
+  <form id="toolForm" class="mform"><label>Добавить своё<input id="tN" class="inp" placeholder="например, спицы 5 мм, 60 см"></label><button class="btn sm" type="submit">Добавить</button></form>
+ </section>
 </main>
+
+<div class="viewer" id="viewer" hidden>
+  <img id="vImg" alt="">
+  <div class="vbar"><span id="vDate"></span><span style="display:flex;gap:8px"><button class="btn sm danger" id="vDel">Удалить</button><button class="btn sm" id="vClose">Закрыть</button></span></div>
+</div>
+
+<nav class="tabs" aria-label="Вкладки">
+  <button data-v="counter" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5"/></svg>Счётчик</button>
+  <button data-v="projects"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg>Проекты</button>
+  <button data-v="shop"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>Покупки</button>
+</nav>
 
 <script>
 {
-  const KEY = 'kosynka-v1';
-  const IDLE = 30 * 60 * 1000;
-  const DEF = {startRow:20, startPrev:32, inc:2, anchor:21, period:4, done:[], cur:0, total:0, run:null, last:0, rowStart:0, began:0};
-  let S = Object.assign({}, DEF);
-  try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign({}, DEF, JSON.parse(raw)); } catch (e) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  // Выкройки. {a|b|c} — числа по размерам. Тексты — краткие заметки по выкройкам DROPS; подробности и схемы — в оригинале.
+  const PATTERNS = [
+  {key:'lisbon', name:'Шаль Lisbon Tiles', drops:'DROPS 177-4', craft:'Крючок',
+   what:'Треугольная шаль из ажурных квадратов-«плиток»: 45 квадратов и 10 половинок, соединённых крючком.',
+   measures:'160 см по верху, 80 см в середине',
+   yarn:[{n:'DROPS Kid-Silk', c:'цвет 08, серо-голубой', g:'100', ball:25}],
+   tools:['Крючок 3,5 мм'], extra:[], gauge:'1 квадрат = 11 × 11 см'},
 
+  {key:'drops91-8', name:'Жакет-болеро из Karisma', drops:'DROPS 91-8', craft:'Спицы',
+   what:'Короткий жакет-болеро лицевой гладью с широкой обвязкой резинкой по всему краю: горловина, полочки и низ спинки. Кайма коричневым.',
+   sizes:['S','M','L','XL','XXL'],
+   yarn:[{n:'DROPS Karisma Superwash', c:'цвет 50, серо-зелёный меланж', g:'{450|500|550|600|650}', ball:50},
+         {n:'DROPS Karisma Superwash', c:'цвет 62, коричневый (кайма)', g:'50', ball:50}],
+   tools:['Спицы 4,5 мм', 'Круговые спицы 4,5 мм'], extra:[], gauge:'20 п. × 26 р. лицевой гладью = 10 × 10 см', rp:26,
+   stages:[
+    {t:'Спинка: низ', d:'Серо-зелёной набор {36|44|52|64|74} п. Гладь; по бокам через ряд набирать 5, 4, 2×3, 1×3 п. → {72|80|88|100|110} п. С {8|8|8|9|9} см +1 п. с каждой стороны каждые {2|2|2,5|3|3} см, всего {6|6|6|5|5} раз → {84|92|100|110|120} п.', cm:'{21|22|23|24|25}'},
+    {t:'Спинка: проймы', d:'С каждой стороны через ряд закрыть 3 п. ×1, 2 п. ×{0|1|2|4|6}, 1 п. ×{2|3|4|4|5} → {74|76|78|80|80} п.', cm:'{36|38|40|42|44}'},
+    {t:'Спинка: горловина', d:'Закрыть средние {34|34|34|36|38} п., в следующем ряду ещё по 1 п. у шеи → по {19|20|21|21|20} п. на плечо. Закрыть.', cm:'{38|40|42|44|46}'},
+    {t:'Левая полочка: низ', d:'Набор {18|22|26|32|37} п. К середине переда через ряд +3, +2 ×2, +1 ×2, потом +1 каждые 4 ряда ×3. Сбоку с {2|2|2|3|3} см +1 п. каждые {2|2|2,5|3|3} см ×{6|6|6|5|5} → {36|40|44|49|54} п.', cm:'{15|16|17|18|19}'},
+    {t:'Левая полочка: верх', d:'Пройма как на спинке → {31|32|33|34|34} п. С {25|27|29|30|32} см у горловины −1 п. через ряд ×{6|6|6|7|6}, затем −2 п. через ряд ×{3|3|3|3|4} → {19|20|21|21|20} п. плеча. Закрыть.', cm:'{32|34|36|38|40}'},
+    {t:'Правая полочка', d:'Как левая, зеркально.', cm:'{32|34|36|38|40}'},
+    {t:'Рукав 1: манжета', d:'Коричневой {65|65|72|72|79} п., 1 изнаночный ряд, 2 ряда резинки 3 лиц. / 4 изн., дальше серо-зелёной. На 2 см изнаночные дорожки 4 → 3 п. = {56|56|62|62|68} п. На 14 см — лицевой ряд, затем ряд с убавками до {52|52|56|56|60} п.', cm:'14'},
+    {t:'Рукав 1: до оката', d:'Гладь. С {21|19|19|18|19} см +1 п. с каждой стороны каждые {5,5|3,5|3,5|2,5|2} см, всего {6|9|9|12|13} раз → {64|70|74|80|86} п.', cm:'{52|51|50|49|47}'},
+    {t:'Рукав 1: окат', d:'С каждой стороны через ряд закрыть 3 п. ×1, 2 п. ×3, 1 п. ×{0|1|2|4|6}; дальше по 2 п. в начале каждого ряда до 57 см, по 3 п. в начале 2 рядов, остальное закрыть.', cm:'58'},
+    {t:'Рукав 2', d:'Так же, как первый.', cm:'58'},
+    {t:'Сборка', d:'Сшить плечи, вшить рукава, сшить бока и рукава за кромкой.'},
+    {t:'Обвязка резинкой', d:'Круговые, серо-зелёная: от середины спинки поднять {348|384|414|456|492} п. (кратно 6) по горловине, полочкам и низу спинки; под проймами не стягивать. 1 круг изн., 1 круг лиц., резинка 3×3. На 3 см изн. дорожки до 4 п., на 7 см — до 5, на 11 см коричневой — до 6 (кроме средних 60–65 п. спинки). 1 круг по рисунку, свободно закрыть.', cm:'11'}
+   ]},
+
+  {key:'drops94-12', name:'Ажурный жакет из Vivaldi', drops:'DROPS 94-12', craft:'Спицы + крючок',
+   what:'Лёгкий жакет с волнистым ажуром, вяжется одним полотном вместе с рукавами и складывается пополам. Край обвязан крючком, застёжка — брошь.',
+   sizes:['XS/S','M/L','XL/XXL'],
+   yarn:[{n:'DROPS Vivaldi', c:'цвет 06, молочный', g:'{100|150|150}', ball:0},
+         {n:'DROPS Cotton Viscose', c:'цвет 02, молочный (обвязка)', g:'50', ball:50}],
+   tools:['Круговые спицы 6 мм', 'Крючок 3 мм'], extra:['Брошь для застёжки'],
+   gauge:'15 п. × 18 р. узором = 10 × 10 см', rp:18, note:'Схемы M.1–M.3 есть только в выкройке на сайте.',
+   stages:[
+    {t:'Набор', d:'Набор {147|176|205} п. на две сложенные спицы 6 мм (край будет эластичным), одну спицу вынуть. 2 ряда платочной вязкой.', rows:'2'},
+    {t:'Узор M.1', d:'M.1 один раз по высоте, по 1 кромке с краёв → {87|104|121} п.', cm:'20'},
+    {t:'Узор M.2', d:'M.2 с кромками.', cm:'{24|25|26}'},
+    {t:'Рукава', d:'Набрать по {56|53|53} п. с каждой стороны → {199|210|227} п. M.2, по краям {6|3|3} п. платочной. На {37|40|43} см поставить маркер — дальше мерить от него.', cm:'{37|40|43}'},
+    {t:'Закрытие рукавов', d:'Когда от маркера {13|15|17} см и следующий ряд — 1-й ряд M.2: очень свободно закрыть по {56|53|53} п. с каждой стороны → {87|104|121} п.', cm:'{13|15|17}', from:'от маркера'},
+    {t:'Узор M.2', d:'M.2 с кромками.', cm:'{17|20|23}', from:'от маркера'},
+    {t:'Узор M.3', d:'M.3 → {147|176|205} п. 2 ряда платочной, очень свободно закрыть (накид примерно каждые 6 п.).', cm:'{37|40|43}', from:'от маркера'},
+    {t:'Сборка', d:'Сложить пополам изнанкой внутрь, сшить рукава и бока за кромкой.'},
+    {t:'Обвязка крючком', d:'Крючок 3 мм, Cotton Viscose, по краю полочек и рукавов: 1 сбн, *4 вп, пропустить 1–1,5 см, 1 сбн*, в конце соединительный столбик.'}
+   ]},
+
+  {key:'falling-water', name:'Falling Water', drops:'DROPS 227-40', craft:'Спицы',
+   what:'Жакет сверху вниз в 2 нити Kid-Silk: седельные плечи, пышные рукава, высокий воротник, на пуговицах.',
+   sizes:['S','M','L','XL','XXL','XXXL'],
+   yarn:[{n:'DROPS Kid-Silk', c:'цвет 37, north sea · вязать в 2 нити', g:'{275|300|325|350|375|425}', ball:25}],
+   tools:['Круговые спицы 5 мм, 40 и 80 см', 'Круговые спицы 3 мм, 80 см', 'Чулочные спицы 3 мм'],
+   extra:['Перламутровые пуговицы DROPS №522 — {6|6|6|7|7|7} шт.'],
+   gauge:'17 п. × 22 р. гладью в 2 нити = 10 × 10 см', rp:22, note:'Схемы A.1–A.3 есть только в выкройке на сайте.',
+   stages:[
+    {t:'Воротник', d:'Спицы 3 мм, 2 нити: набор {114|114|127|127|143|143} п., узор A.1–A.3 по схеме. Потом ряд с убавками → {104|108|116|120|128|128} п.: планки по 5, полочки по {17|18|19|20|21|21}, плечи по {13|13|15|15|17|17}, спинка {34|36|38|40|42|42}. 1 изнаночный ряд.', cm:'8'},
+    {t:'Седельное плечо 1', d:'На {13|13|15|15|17|17} п. плеча: +1 кромка с каждой стороны, изнаночные 1 → 2 → {21|21|24|24|27|27} п. Узор A.3.', cm:'{8|8|9|9|10|10}', from:'от прибавок'},
+    {t:'Седельное плечо 2', d:'Так же.', cm:'{8|8|9|9|10|10}', from:'от прибавок'},
+    {t:'Соединение', d:'Спицы 5 мм: полочка, поднять {14|14|14|15|15|15} п. вдоль плеча, плечо с прибавками → {58|58|67|67|76|76} п., поднять, спинка, поднять, второе плечо, поднять, вторая полочка → {250|254|276|284|306|306} п. В этом ряду — первая петля для пуговицы.', rows:'1'},
+    {t:'Кокетка', d:'4 маркера. Каждый 2-й ряд: на рукавах +4 п. ×{7|9|6|9|6|8}, на кокетке +4 п. ×{7|9|11|12|16|21} → {306|326|344|368|394|422} п. Петли для пуговиц каждые {9,5|9,5|10|10|8,5|9} см.', cm:'{19|21|22|24|25|27}', from:'от воротника'},
+    {t:'Разделение', d:'Перед {43|46|49|52|57|62} п., рукав {72|76|79|85|88|92} п. на нитку, набрать {6|6|8|10|10|10}, спинка {76|82|88|94|104|114}, рукав на нитку, набрать {6|6|8|10|10|10}, перед.', rows:'1'},
+    {t:'Корпус', d:'{174|186|202|218|238|258} п., гладь и планки. Примерить: до нужной длины без 3 см. Изнаночный ряд с прибавками +{38|41|43|48|52|56} → {212|227|245|266|290|314} п.', cm:'29', from:'от разделения'},
+    {t:'Низ', d:'Спицы 3 мм, узор A.3, закрыть по рисунку. Длина ≈{56|58|60|62|64|66} см от плеча.', cm:'3'},
+    {t:'Рукав 1', d:'{78|82|87|95|98|102} п. по кругу, 5 мм. Через 4 см −2 п. под рукавом ({без повторов|без повторов|ещё 1 раз через 8 см|ещё 3 раза каждые 2,5 см|ещё 4 раза каждые 2 см|ещё 4 раза каждые 2 см}) → {76|80|83|87|88|92} п. Потом круг с убавками до {42|42|45|45|48|51} п.', cm:'{27|25|25|23|22|21}', from:'от разделения'},
+    {t:'Рукав 1: манжета', d:'Чулочные 3 мм, A.1, закрыть по рисунку. Рукав ≈{36|34|34|32|31|30} см.', cm:'9'},
+    {t:'Рукав 2', d:'Так же, как первый.'},
+    {t:'Пуговицы', d:'Пришить пуговицы на левую планку.'}
+   ]},
+
+  {key:'comfort-wrap', name:'Comfort Wrap', drops:'DROPS 187-27', craft:'Спицы',
+   what:'Жилет-накидка: одно длинное ажурное полотно, складывается пополам и пришивается по бокам — получаются проймы.',
+   sizes:['S/M','L/XL','XXL','XXXL'],
+   yarn:[{n:'DROPS Brushed Alpaca Silk', c:'цвет 01, молочный', g:'{175|200|200|225}', ball:25}],
+   tools:['Круговые спицы 5,5 мм, 80 см', 'Для закрытия — спица на полразмера больше'], extra:[],
+   gauge:'16 п. × 30 р. платочной вязкой = 10 × 10 см', rp:30, note:'Схема A.1 есть только в выкройке на сайте.',
+   stages:[
+    {t:'Резинка', d:'Свободно набрать {143|151|151|159} п. 1 изнаночный ряд, резинка 1×1 с 1 платочной кромкой.', cm:'2'},
+    {t:'Узор до пройм', d:'3 п. платочной, A.1a, A.1b ×{15|16|16|17}, A.1c, 3 п. платочной. На {29|31|33|34} см — маркеры с обеих сторон.', cm:'{29|31|33|34}', rep:12},
+    {t:'Узор', d:'Продолжать узор; закончить на 6-м или 12-м ряду схемы.', cm:'{101|107|112|115}', rep:12},
+    {t:'Резинка и закрытие', d:'Резинка 1×1, свободно закрыть по рисунку.', cm:'2'},
+    {t:'Сборка', d:'Сложить закрытый край к низу изнанкой внутрь, углы — точно к маркерам; пришить по бокам примерно 3 см.'}
+   ]},
+
+  {key:'celtica', name:'Celtica', drops:'DROPS 143-1', craft:'Спицы',
+   what:'Приталенный жакет с косами и шалевым воротником, на пуговицах.',
+   sizes:['S/M','L/XL','XXL/XXXL'],
+   yarn:[{n:'DROPS Lima', c:'цвет 5610, коричневый', g:'{750|850|1000}', ball:50}],
+   tools:['Круговые спицы 4 мм, 80 см', 'Вспомогательная спица для кос'],
+   extra:['Перламутровые пуговицы DROPS №521 — 6 шт.'],
+   gauge:'21 п. × 28 р. гладью = 10 × 10 см', rp:28, note:'Схема кос A-1 есть только в выкройке на сайте.',
+   rem:[{stage:'1', cm:'{7|8|9}', t:'1-я петля для пуговицы'}, {stage:'1', cm:'{14|15|16}', t:'2-я петля для пуговицы'},
+        {stage:'1', cm:'{21|22|23}', t:'3-я петля для пуговицы'}, {stage:'{1|1|2}', cm:'{28|29|30}', t:'4-я петля для пуговицы'},
+        {stage:'3', cm:'{35|36|37}', t:'5-я петля для пуговицы'}, {stage:'4', cm:'{42|43|44}', t:'6-я петля для пуговицы'}],
+   stages:[
+    {t:'Низ', d:'Набор {254|309|360} п. (по 6 п. планки). 5 рядов лицевыми, затем ряд с прибавками под косы → {302|369|432} п. Дальше: планка, [A-1, изн. {14|13|12}] ×{7|9|11}, A-1, планка. Маркеры через {75|92|108} п. от краёв.', cm:'{5|7|9}'},
+    {t:'Талия', d:'−1 п. в каждой изнаночной дорожке, всего {12|11|10} раз каждые 6 рядов → {218|270|322} п. Петли для пуговиц на {7, 14, 21, 28, 35, 42|8, 15, 22, 29, 36, 43|9, 16, 23, 30, 37, 44} см.', cm:'29'},
+    {t:'До груди', d:'По рисунку.', cm:'{33|35|36}'},
+    {t:'Грудь', d:'+1 п. в каждой изнаночной дорожке, повторить каждые 6 рядов ещё {3|2|2} раз → {246|297|355} п.', cm:'{41|42|43}'},
+    {t:'Воротник и вырез', d:'Прибавки для воротника у края: через ряд 12 раз, затем каждые 4 ряда 6 раз. Через 2 см — убавки выреза: через ряд 6 раз, затем каждые 4 ряда 6 раз.', cm:'{51|52|53}'},
+    {t:'Проймы', d:'Закрыть по {6|6|7} п. на боках, дальше каждую часть отдельно.', rows:'1'},
+    {t:'Левая полочка', d:'Пройма: 3 п. ×{0|1|3}, 2 п. ×{3|3|4}, 1 п. ×{5|4|6} → {55|66|70} п. На ≈{70|73|76} см −{6|9|9} → {49|57|61}; закрыть {25|33|37} п. плеча, на 24 п. воротник укороченными рядами ≈5,5 см.', cm:'{70|73|76}'},
+    {t:'Правая полочка', d:'Зеркально левой.', cm:'{70|73|76}'},
+    {t:'Спинка', d:'{114|139|167} п., пройма как на полочках → {92|113|121}. На ≈{68|71|74} см закрыть средние {24|23|23} п., плечи отдельно: −2 у шеи, −{6|9|9} → {26|34|38} п., закрыть.', cm:'{68|71|74}'},
+    {t:'Рукав 1: манжета', d:'Поперёк: 22 п. → 28, A-1 {4|4|5} раза по высоте + 2 ряда, обратно 22 п., закрыть.', cm:'{24|24|30}'},
+    {t:'Рукав 1', d:'Поднять по краю манжеты, {52|54|62} п., изнаночная гладь. С 15 см +1 п. с каждой стороны, затем каждые {3|2|2} см ещё {10|13|13} раз → {74|82|90}. С {48|45|43} см окат: 4 п. ×1, 2 п. ×3, 1 п. ×{6|7|9}, по 2 п. до {57|55|54} см, 3 п. ×1, закрыть.', cm:'{58|56|55}'},
+    {t:'Рукав 2', d:'Так же, как первый.', cm:'{58|56|55}'},
+    {t:'Сборка', d:'Плечевые швы; воротник сшить посередине спинки и пришить к вырезу; швы рукавов (манжету край в край); вшить рукава; пуговицы.'}
+   ]},
+
+  {key:'never-cold-again', name:'Never Cold Again', drops:'DROPS 66-10', craft:'Спицы',
+   what:'Длинное тёплое пальто с узорами и регланом, в 2 нити: мохер Vienna + шерсть Ull-Tweed. 7 пуговиц.',
+   measures:'Грудь {108|116|124} см, низ {128|136|144} см',
+   sizes:['S','M','L'],
+   yarn:[{n:'DROPS Vienna', c:'цвет 19, тёмный серо-синий', g:'{600|650|700}', ball:50},
+         {n:'DROPS Karisma Ull-Tweed', c:'цвет 02, коричневый · по 1 нити каждой вместе', g:'{550|600|650}', ball:50}],
+   tools:['Круговые спицы 8 мм'], extra:['Пуговицы DROPS Duffel №520 — 7 шт.'],
+   gauge:'10 п. × 14 р. гладью в 2 нити = 10 × 10 см', rp:14,
+   rem:[{stage:'1', cm:'{40|45|50}', t:'1-я петля для пуговицы'}, {stage:'1', cm:'{53|58|63}', t:'2-я петля для пуговицы'},
+        {stage:'1', cm:'{65|70|75}', t:'3-я петля для пуговицы'}, {stage:'5', cm:'{78|83|88}', t:'4-я петля для пуговицы'}],
+   note:'PDF обрывается на реглане: нет воротника, сборки и схем узоров 1–3.',
+   stages:[
+    {t:'Низ', d:'Набор {138|146|154} п. (по 5 п. планки) в 2 нити. 2 ряда платочной, во 2-м +16 → {154|162|170} п. Узоры 1–3 по выкройке, маркеры на боках.', cm:'20'},
+    {t:'Корпус', d:'−1 п. с каждой стороны маркеров (−4) каждые {10|11|12} см, всего 5 раз → {134|142|150}. Петли для пуговиц на {40, 53, 65, 78|45, 58, 70, 83|50, 63, 75, 88} см.', cm:'{72|76|81}'},
+    {t:'Проймы', d:'По 4 п. на булавки на боках → полочки по {34|36|38}, спинка {58|62|66}. Отложить.'},
+    {t:'Рукав 1', d:'Нижние 10 см отворачиваются. {30|32|34} п., 2 ряда платочной, узор 1. С 20 см +1 п. с каждой стороны 8 раз каждые 4 см → {46|48|50}. Закрыть по 3 п. → {40|42|44}.', cm:'{54|54|55}'},
+    {t:'Рукав 2', d:'Так же.', cm:'{54|54|55}'},
+    {t:'Реглан', d:'Всё на одну спицу → {206|218|230} п., 4 маркера. Убавки 8 п. в ряду: через ряд {13|13|12} раз, затем каждый ряд {6|7|9} раз. С {89|94|99} см планки на булавку, вырез: 2 п. ×2, 1 п. ×2. Остальные петли для пуговиц — на воротнике.'},
+    {t:'Воротник и сборка', d:'Этой части нет в PDF — пришли последнюю страницу выкройки.'}
+   ]},
+
+  {key:'velvet-rose', name:'Velvet Rose', drops:'DROPS 41-14', craft:'Спицы',
+   what:'Короткий жакет из мохера Vienna с широкими резинками на талии и манжетах, на 6 пуговицах.',
+   sizes:['S','M','L'],
+   yarn:[{n:'DROPS Vienna', c:'цвет 36, розовый', g:'{300|300|350}', ball:50}],
+   tools:['Круговые спицы 4 и 6 мм', 'Чулочные спицы 4 и 6 мм'], extra:['Пуговицы — 6 шт.'],
+   gauge:'14 п. × 16 р. гладью = 10 × 10 см', rp:16,
+   stages:[
+    {t:'Резинка', d:'Круговые 4 мм: {147|153|165} п., резинка 3×3.', cm:'14'},
+    {t:'Корпус', d:'6 мм, гладь, в 1-м ряду +{1|3|3} → {148|156|168} п.', cm:'{23|25|24}'},
+    {t:'Разделение', d:'Полочка {36|38|41}, закрыть 2, спинка {72|76|82}, закрыть 2, полочка {36|38|41}.', rows:'1'},
+    {t:'Левая полочка', d:'Пройма через ряд: 2 п. ×{1|1|2}, 1 п. ×{0|1|2} → {34|35|35}. На 35 см вырез через ряд: 4 п. ×2, 2 п. ×2, 1 п. ×2, затем каждые 4 ряда 1 п. ×2. Закрыть.', cm:'{48|50|50}'},
+    {t:'Правая полочка', d:'Зеркально левой.', cm:'{48|50|50}'},
+    {t:'Спинка', d:'Пройма как на полочке → {68|70|70}. На {46|48|48} см закрыть средние 20 п., затем по 2 п. у шеи. Закрыть.', cm:'{48|50|50}'},
+    {t:'Рукав 1', d:'Чулочные 4 мм: 36 п., резинка 3×3 12 см. 6 мм, гладь, +{4|4|6} → {40|40|42}; +2 п. посередине под рукавом каждый 3-й круг, 15 раз → {70|70|72}.', cm:'{43|44|45}'},
+    {t:'Рукав 1: окат', d:'Закрыть 6 п. под рукавом, дальше поворотными рядами: с каждой стороны через ряд по 5 п. 4 раза, закрыть.', cm:'{50|51|52}'},
+    {t:'Рукав 2', d:'Так же, как первый.', cm:'{50|51|52}'},
+    {t:'Планки и сборка', d:'Плечевые швы. Вдоль полочек по ≈60 п. на 4 мм, 3 см платочной; на правой через 1 см 6 петель (закрыть 2, набрать 2). Горловина ≈100–110 п., резинка 2 см. Вшить рукава, пришить пуговицы.'}
+   ]},
+
+  {key:'new-romantic', name:'New Romantic', drops:'DROPS 8-19', craft:'Спицы',
+   what:'Объёмный жакет английской резинкой из мохера, воротник продолжает полочки, застёжка на 2 пуговицы.',
+   sizes:['S','M','L'],
+   yarn:[{n:'DROPS Vienna', c:'цвет 04, светло-зелёный', g:'{350|400|450}', ball:50},
+         {n:'или DROPS Melody', c:'цвет 09, светлый морской', g:'{250|300|350}', ball:50, alt:true}],
+   tools:['Спицы 3 мм', 'Спицы 6,5 мм'], extra:['Пуговицы — 2 шт.'],
+   gauge:'11 п. × 15 р. английской резинкой = 10 × 10 см', rp:15,
+   note:'PDF обрывается на правой полочке: нет рукавов и сборки.',
+   stages:[
+    {t:'Спинка', d:'3 мм: {64|66|68} п., резинка 1×1 6 см. 6,5 мм, английская резинка, в 1-м ряду {−1 п.|+3 п.|+7 п.} → {63|69|75} п. Закрыть.', cm:'{58|60|60}'},
+    {t:'Левая полочка', d:'{32|34|34} п., резинка 6 см; английская резинка, +{5|5|9} → {37|39|43}. На {58|60|60} см закрыть {21|23|26} п. плеча.', cm:'{58|60|60}'},
+    {t:'Левая полочка: воротник', d:'Продолжать английскую резинку на {16|16|17} п., закрыть.', cm:'{8,5|9|9}', from:'воротник'},
+    {t:'Правая полочка', d:'Зеркально левой; в резинке через 5 рядов 2 петли: 3 п., закрыть 2, 4 п., закрыть 2 (в обратном ряду набрать).'},
+    {t:'Рукава и сборка', d:'Этой части нет в PDF — пришли остаток выкройки.'}
+   ]},
+
+  {key:'summer-wind', name:'Summer Wind', drops:'DROPS 95-15', craft:'Спицы',
+   what:'Жакет одним полотном толстыми спицами 12 мм из мохера: рукава-кимоно и длинные манжеты резинкой.',
+   sizes:['S/M','M/L','XL','XXL'],
+   yarn:[{n:'DROPS Vienna', c:'цвет 43, светло-коричневый', g:'{200|200|250|250}', ball:50}],
+   tools:['Круговые спицы 12 мм'], extra:[],
+   gauge:'8 п. × 9 р. гладью = 10 × 10 см', rp:9,
+   note:'PDF обрывается на манжете: дальше (обвязка резинкой 3×2 и сборка) не попало.',
+   stages:[
+    {t:'Начало и рукава', d:'Набор {48|53|56|61} п. на две сложенные спицы, гладь. В конце каждого ряда набирать: 5 п. ×{0|0|0|2}, 6 п. ×{1|2|3|1}, 8 п. ×{2|1|0|0} → {92|93|92|93} п.', cm:'8'},
+    {t:'Середина', d:'Гладь.', cm:'{26|28|30|32}'},
+    {t:'Закрытие рукавов', d:'Свободно закрывать в конце каждого ряда: 8 п. ×{2|1|0|0}, 6 п. ×{1|2|3|1}, 5 п. ×{0|0|0|2} → {48|53|56|61} п. 1 ряд, очень свободно закрыть.', cm:'{34|36|38|40}'},
+    {t:'Манжета 1', d:'Поднять ≈16–22 п. по краю рукава, 1 ряд с изнанки, 1 ряд с прибавками до {26|32|32|32} п., резинка 3×3, свободно закрыть.', cm:'{17|18|19|20}'},
+    {t:'Манжета 2', d:'Так же.', cm:'{17|18|19|20}'},
+    {t:'Обвязка и сборка', d:'Этой части нет в PDF — пришли остаток выкройки.'}
+   ]},
+
+  {key:'milky-way', name:'Milky Way', drops:'DROPS 138-19', craft:'Спицы',
+   what:'Пончо-кардиган: длинный прямоугольник, складывается на плечах, по центру ажурная дорожка, на поясе.',
+   sizes:['S','M','L','XL','XXL','XXXL'],
+   yarn:[{n:'DROPS Vienna', c:'цвет 21, молочный', g:'{300|300|350|400|400|450}', ball:50},
+         {n:'или DROPS Melody', c:'цвет 01, молочный', g:'{250|250|250|300|300|350}', ball:50, alt:true}],
+   tools:['Круговые спицы 7 мм, 80 см'], extra:[],
+   gauge:'13 п. × 18 р. гладью = 10 × 10 см', rp:18,
+   stages:[
+    {t:'Спинка', d:'{90|94|100|106|110|114} п., 6 рядов платочной. Гладь, по 3 п. платочной с краёв, ажур (4 ряда) на средних {40|40|40|46|46|46} п. На 42 см — маркеры пройм.', cm:'{63|65|67|69|71|73}', rep:4},
+    {t:'Правая полочка', d:'{45|47|50|53|55|57} п., мерить отсюда. На {21|23|25|27|29|31} см маркер проймы. В конце 6 рядов платочной, закрыть.', cm:'{68|70|72|74|76|78}', rep:4},
+    {t:'Левая полочка', d:'Зеркально правой.', cm:'{68|70|72|74|76|78}', rep:4},
+    {t:'Обвязка проймы 1', d:'Поднять ≈{55|60|65|70|75|80} п. между маркерами, 8 рядов платочной, закрыть.', rows:'8'},
+    {t:'Обвязка проймы 2', d:'Так же.', rows:'8'},
+    {t:'Пояс', d:'6 п., 4 ряда платочной, гладь с 1 платочной по краям, 4 ряда платочной, закрыть.', cm:'140'},
+    {t:'Сборка', d:'Шов под рукавом. Продеть пояс ≈{36|38|40|42|44|46} см от плеча и ≈{16|16|16|15|14|13} см от бока, завязать спереди.'}
+   ]},
+
+  {key:'blush-pearl', name:'Blush Pearl Jacket', drops:'DROPS 272-15', craft:'Спицы',
+   what:'Жакет сверху вниз с «европейскими» плечами, узор «рис», V-вырез и пояс. В 3 нити: 2 Alpaca + 1 Kid-Silk.',
+   sizes:['XS','S','M','L','XL','XXL','XXXL'],
+   yarn:[{n:'DROPS Alpaca', c:'цвет 302, Camel · в 2 нити', g:'{600|650|700|750|850|900|1100}', ball:50},
+         {n:'DROPS Kid-Silk', c:'цвет 54, Light Sand · 1 нить', g:'{125|125|150|150|175|200|200}', ball:25}],
+   tools:['Круговые спицы 5 мм, 40 и 80 см', 'Чулочные спицы 5 мм'], extra:[],
+   gauge:'17 п. × 22 р. узором «рис» в 3 нити = 10 × 10 см', rp:22,
+   note:'PDF обрывается на рукаве: нет конца рукава и пояса. Схема A.1 есть только в выкройке на сайте.',
+   stages:[
+    {t:'Правая планка', d:'{21|21|21|22|22|23|23} п. в 3 нити, укороченные ряды 1–4 по выкройке; в последнем ряду −1 → {20|20|20|21|21|22|22} п. на держатель.', cm:'{6|7|7|7,5|7,5|8|8}'},
+    {t:'Левая планка', d:'Поднять из наборного края, ряды 1–4 зеркально, −1 → на держатель. Вся планка {12|14|14|15|15|16|16} см.', cm:'{6|7|7|7,5|7,5|8|8}'},
+    {t:'Спинка: плечи', d:'Поднять {23|25|25|27|27|29|29} п. по краю планки. Прибавки с обеих сторон в каждом ряду (ряды 2–3) {11|11|12|13|14|14|15} раз → {67|69|73|79|83|85|89} п. Маркер — дальше мерить от него.', rows:'{23|23|25|27|29|29|31}'},
+    {t:'Спинка: до пройм', d:'A.1 («рис»), по 3 лицевые с краёв.', cm:'{8|9|9|9|8|5|3}', from:'от маркера'},
+    {t:'Спинка: проймы', d:'+1 п. с каждой стороны через ряд {4|4|6|6|8|12|14} раз → {75|77|85|91|99|109|117} п. Отметь ряд A.1, где начала. Потом на держатель.', cm:'{12|13|14|14|15|16|16}', from:'от маркера'},
+    {t:'Левая полочка', d:'Планка {20|20|20|21|21|22|22} п. + поднять {22|22|24|26|28|28|30} п. вдоль плеча + 1 = {43|43|45|48|50|51|53} п. С {10|11|12|12|13|13|15} см V-вырез: +1 через ряд {4|4|4|4|4|5|5} раз, затем каждые 4 ряда {7|7|7|8|8|8|8} раз. С {22|23|23|25|24|21|21} см пройма: +1 через ряд {4|4|6|6|8|12|14} раз → {58|58|62|66|70|76|80} п.', cm:'{26|27|28|30|31|32|34}', from:'от поднятого ряда'},
+    {t:'Правая полочка', d:'Зеркально левой, вдоль правого плеча.', cm:'{26|27|28|30|31|32|34}', from:'от поднятого ряда'},
+    {t:'Корпус', d:'Соединить: полочка, набрать {6|6|6|8|8|10|10}, спинка, набрать {6|6|6|8|8|10|10}, полочка → {203|205|221|239|255|281|297} п. A.1 и планки. Закрыть по рисунку.', cm:'{54|56|58|60|62|64|66}', from:'от середины спинки'},
+    {t:'Рукав 1: окат', d:'Поднять {68|72|74|80|84|88|92} п. вокруг проймы. Укороченные ряды A.1 по выкройке, всего {22|26|26|28|32|38|42} поворота.'},
+    {t:'Рукав 1: дальше', d:'Конец описания рукава не попал в PDF — пришли остаток выкройки.'},
+    {t:'Рукав 2', d:'Так же, как первый.'},
+    {t:'Пояс', d:'Описание пояса не попало в PDF.'}
+   ]}
+  ];
+
+  const PAT = Object.fromEntries(PATTERNS.map(p => [p.key, p]));
+  const KEY = 'vyazanie-v2', OLD = 'kosynka-v1', PH = 'vyazanie-photo-';
+  const IDLE = 30 * 60 * 1000, WEEK = 7 * 864e5;
+  const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36);
+  const BASE = () => ({type:'rows', status:'active', size:null, startRow:1, startPrev:0, inc:0, anchor:1, period:0, done:[], cur:0,
+    total:0, run:null, last:0, rowStart:0, began:0, notes:'', meas:[], myRp:null, tcm:null, rem:[], remSeeded:false, finished:0, inShop:null});
+  const KOS = {startRow:20, startPrev:32, inc:2, anchor:21, period:4};
+  const R3 = [
+    {n:'Круг 1', d:'Кольцо из 4 воздушных петель, в него 12 столбиков с накидом'},
+    {n:'Круг 2', d:'12 групп: по 4 столбика с 2 накидами, провязанных вместе'},
+    {n:'Круг 3', d:'Арки из воздушных петель, между ними столбики без накида'}
+  ];
+  const LISBON = () => Object.assign(BASE(), {
+    id:'lisbon', pkey:'lisbon', type:'motifs', name:'Шаль Lisbon Tiles', created:Date.now(),
+    info:'Термины переведены с британских: treble = столбик с накидом, double crochet = столбик без накида.',
+    parts:[
+      {key:'sq', name:'Квадраты', forms:['квадрат', 'квадрата', 'квадратов'], acc:'квадрат', ready:'готов', chart:'A.1', goal:45,
+       rounds:R3.concat([
+         {n:'Круг 4', d:'Квадрат: в углах группы по 5 столбиков с накидом, по сторонам арки и столбики без накида'},
+         {n:'Круг 5', d:'Обвязка: арки из воздушных петель со столбиками с накидом'}])},
+      {key:'half', name:'Половинки', forms:['половинка', 'половинки', 'половинок'], acc:'половинку', ready:'готова', chart:'A.2', goal:10,
+       rounds:R3.concat([
+         {n:'Ряд 4', d:'От стрелки — поворотный ряд: группы столбиков с накидом и арки'},
+         {n:'Ряд 5', d:'Поворотный ряд: обвязка арками со столбиками с накидом'}])}
+    ],
+    part:'sq', made:{sq:0, half:0}, rnd:{sq:0, half:0},
+    check:[
+      {label:'Соединить полосы по схеме A.3 в одну сторону: 1 и 2, 2 и 3 … 8 и 9', ok:false},
+      {label:'Соединить все полосы в другую сторону так же', ok:false},
+      {label:'Пришить 2 крайние половинки к полосам 1 и 9, закрепить нити', ok:false}
+    ]
+  });
+
+  // ---------- хранение ----------
+  const VER = 7, AUTO = 'vyazanie-auto', SNAP_EVERY = 4 * 3600 * 1000;
+  const readJSON = k => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch (e) { return null; } };
+  const valid = d => !!(d && Array.isArray(d.projects) && d.projects.length);
+  const autoList = () => { const a = readJSON(AUTO); return Array.isArray(a) ? a.filter(x => x && valid(x.data)) : []; };
+  function snapshot(reason, data) {
+    try {
+      const a = autoList();
+      a.push({t:Date.now(), reason, data:JSON.parse(JSON.stringify(data))});
+      while (a.length > 6) a.shift();
+      localStorage.setItem(AUTO, JSON.stringify(a));
+    } catch (e) {}
+  }
+  let P = readJSON(KEY);
+  if (!valid(P)) { const a = autoList(); if (a.length) P = a[a.length - 1].data; }
+  if (valid(P) && P.ver !== VER) snapshot('update', P);
+  if (!valid(P)) {
+    let old = null;
+    try { const r = localStorage.getItem(OLD); if (r) old = JSON.parse(r); } catch (e) {}
+    P = {projects:[Object.assign(BASE(), KOS, old || {}, {id:'p1', name:'Косынка', created:Date.now()})], active:'p1', view:'counter'};
+  }
+  P.ver = VER;
+  if (!P.firstRun) P.firstRun = Date.now();
+  if (!Array.isArray(P.seeded)) P.seeded = [];
+  if (!P.stash) P.stash = {yarn:[], tools:{}, custom:[]};
+  P.stash.yarn = P.stash.yarn || []; P.stash.tools = P.stash.tools || {}; P.stash.custom = P.stash.custom || [];
+  if (!P.seeded.includes('lisbon')) { P.projects.push(LISBON()); P.seeded.push('lisbon'); }
+  for (const pt of PATTERNS) {
+    if (!pt.stages || P.seeded.includes(pt.key)) continue;
+    P.projects.push(Object.assign(BASE(), {id:'pat-' + pt.key, type:'stages', pkey:pt.key, name:pt.name, status:'plan', st:0, srows:{}, sdone:[], created:Date.now()}));
+    P.seeded.push(pt.key);
+  }
+  P.projects = P.projects.map(p => {
+    const q = Object.assign(BASE(), p);
+    if (q.id === 'lisbon' && !q.pkey) q.pkey = 'lisbon';
+    if (q.type === 'motifs') { q.made = q.made || {}; q.rnd = q.rnd || {}; q.check = q.check || []; }
+    if (q.type === 'stages') { q.srows = q.srows || {}; q.sdone = q.sdone || []; q.st = q.st || 0; }
+    return q;
+  });
+  let S = P.projects.find(p => p.id === P.active) || P.projects[0];
+  P.active = S.id;
+  let lastSnap = (autoList().slice(-1)[0] || {t:0}).t;
+  const save = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
+    if (Date.now() - lastSnap > SNAP_EVERY) { lastSnap = Date.now(); snapshot('auto', P); }
+  };
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
+
+  // ---------- общие помощники ----------
   const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   const pl = (n, f) => { const a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b > 1 && b < 5 ? f[1] : f[2]; };
   const st = n => n + ' ' + pl(n, ['петля', 'петли', 'петель']);
   const pr = n => '+' + n + ' ' + pl(n, ['прибавка', 'прибавки', 'прибавок']);
   const rw = n => n + ' ' + pl(n, ['ряд', 'ряда', 'рядов']);
+  const fmtCm = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  const toNum = v => { const x = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(x) ? x : null; };
+  const pat = (p = S) => {
+    if (p.custom) return {custom:true, name:p.name, stages:p.custom.stages, rp:p.custom.rp || null, yarn:[], tools:[], extra:[]};
+    return p.pkey ? PAT[p.pkey] : null;
+  };
+  // {a|b|c} → значение для выбранного размера
+  const Rz = (s, p = S) => String(s == null ? '' : s).replace(/\{([^}]*)\}/g, (m, body) => {
+    const a = body.split('|');
+    if (p.size != null && a[p.size] != null) return a[p.size];
+    return a.every(x => x === a[0]) ? a[0] : a.join(' / ');
+  });
+  const num1 = (s, p = S) => { const v = Rz(s, p); return /^\d+$/.test(v) ? +v : null; };
+  const isM = () => S.type === 'motifs';
+  const isSt = () => S.type === 'stages';
   const isNo = r => S.period > 0 && (((r - S.anchor) % S.period) + S.period) % S.period === 0;
   const add = r => isNo(r) ? 0 : S.inc;
-  const row = () => S.startRow + S.done.length;
-  const prev = () => S.done.length ? S.done[S.done.length - 1].count : S.startPrev;
+  const lastRowOf = p => p.done.length ? p.done[p.done.length - 1].row : p.startRow - 1;
+  const row = () => lastRowOf(S) + 1;
+  const nRows = list => list.reduce((a, d) => a + (d.gap ? d.row - d.from + 1 : 1), 0);
+  const prevOf = p => p.done.length ? p.done[p.done.length - 1].count : p.startPrev;
+  const prev = () => prevOf(S);
+  const part = () => S.parts.find(p => p.key === S.part) || S.parts[0];
+  const second = pt => S.parts.indexOf(pt) % 2 === 1;
+  const stages = () => (pat() || {stages:[]}).stages;
   const C = 2 * Math.PI * 46;
 
-  // время
-  const settle = now => {
-    if (S.run && now - S.last > IDLE) { S.total += Math.max(S.last - S.run, 0); S.run = null; return true; }
+  // ---------- фото выкроек (localStorage) ----------
+  const phKey = p => PH + (p.pkey || p.id);
+  const photoOf = p => { try { return localStorage.getItem(phKey(p)); } catch (e) { return null; } };
+  function readPhoto(file, W = 360) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const sc = Math.min(1, W / Math.max(img.width, img.height) * (img.height > img.width ? img.height / img.width : 1));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * Math.min(1, W / img.width)); c.height = Math.round(img.height * Math.min(1, W / img.width));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        res(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+      img.src = url;
+    });
+  }
+  const putPhoto = (key, data) => { try { localStorage.setItem(PH + key, data); return true; } catch (e) { return false; } };
+
+  // ---------- свои фото (IndexedDB) ----------
+  const idb = (() => {
+    let dbp = null;
+    const open = () => dbp || (dbp = new Promise((res, rej) => {
+      if (!window.indexedDB) { rej(new Error('no idb')); return; }
+      const r = indexedDB.open('vyazanie', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('photos', {keyPath:'id'});
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    }));
+    const run = async (mode, fn) => {
+      const db = await open();
+      return new Promise((res, rej) => {
+        const t = db.transaction('photos', mode), req = fn(t.objectStore('photos'));
+        t.oncomplete = () => res(req && 'result' in req ? req.result : undefined);
+        t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+      });
+    };
+    return {put:o => run('readwrite', s => s.put(o)), del:id => run('readwrite', s => s.delete(id)), all:() => run('readonly', s => s.getAll())};
+  })();
+  let MY = {};
+  const myOf = p => (MY[p.id] || []).slice().sort((a, b) => a.t - b.t);
+  async function loadMine() {
+    try { const list = await idb.all(); MY = {}; for (const x of list || []) (MY[x.pid] = MY[x.pid] || []).push(x); } catch (e) {}
+    rerender();
+  }
+
+  // ---------- время ----------
+  const settle = (p, now) => {
+    if (p.run && now - p.last > IDLE) { p.total += Math.max(p.last - p.run, 0); p.run = null; return true; }
     return false;
   };
-  const active = now => S.total + (S.run ? Math.max(now - S.run, 0) : 0);
+  const active = (p, now) => p.total + (p.run ? Math.max(now - p.run, 0) : 0);
   function touch(now) {
-    settle(now);
+    settle(S, now);
     if (!S.run) S.run = now;
     if (!S.began) S.began = now;
     S.last = now;
   }
+  function stop(p, now) { settle(p, now); if (p.run) { p.total += Math.max(now - p.run, 0); p.run = null; } }
   const fmtDur = ms => {
     const m = Math.floor(ms / 60000);
-    if (m < 1) return 'меньше минуты';
+    if (m < 1) return ms > 0 ? 'меньше минуты' : '0 мин';
     const h = Math.floor(m / 60), mm = m % 60;
     return h ? (mm ? `${h} ч ${mm} мин` : `${h} ч`) : `${m} мин`;
   };
@@ -197,33 +883,255 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
   };
   const dateFull = t => new Date(t).toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
   const hm = t => new Date(t).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+  const stamp = t => new Date(t).toLocaleString('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
 
+  // ---------- замеры ----------
+  const curStage = () => isSt() ? S.st : null;
+  const curRows = () => isSt() ? (S.srows[S.st] || 0) : (S.type === 'rows' ? row() - 1 : 0);
+  const workRow = () => curRows() + 1;
+  const targetCm = () => {
+    if (isSt()) { const sg = stages()[S.st]; return sg && sg.cm ? toNum(Rz(sg.cm)) : null; }
+    return S.type === 'rows' ? S.tcm : null;
+  };
+  const fromTxt = () => { if (!isSt()) return ''; const sg = stages()[S.st]; return sg && sg.from ? sg.from : ''; };
+  function rpc() {
+    const ms = S.meas.filter(m => m.stage === curStage());
+    if (ms.length >= 2) {
+      const a = ms[0], b = ms[ms.length - 1], dr = b.rows - a.rows, dc = b.cm - a.cm;
+      if (dr > 0 && dc >= 1) return {v:dr / dc, src:'по твоим замерам'};
+    }
+    if (S.myRp) return {v:S.myRp / 10, src:'твоя плотность'};
+    const pt = pat(); if (pt && pt.rp) return {v:pt.rp / 10, src:'плотность выкройки'};
+    return null;
+  }
+  function estimate() {
+    const ms = S.meas.filter(m => m.stage === curStage()), m = ms[ms.length - 1];
+    if (!m) return null;
+    const r = rpc(), cmNow = r ? m.cm + (curRows() - m.rows) / r.v : m.cm, tgt = targetCm();
+    return {m, r, cmNow, tgt, left:tgt != null ? tgt - cmNow : null, rowsLeft:tgt != null && r ? Math.max(0, Math.ceil((tgt - cmNow) * r.v)) : null};
+  }
+
+  // ---------- напоминания ----------
+  function seedRem(p) {
+    const pt = pat(p); if (!pt || !pt.rem || p.remSeeded) return;
+    if (pt.sizes && p.size == null) return;
+    for (const r of pt.rem) {
+      const at = toNum(Rz(r.cm, p)), sg = parseInt(Rz(r.stage, p), 10);
+      if (at != null && isFinite(sg)) p.rem.push({id:uid(), text:r.t, kind:'cm', at, stage:sg, done:false, auto:true});
+    }
+    p.remSeeded = true;
+  }
+  P.projects.forEach(p => { if (p.type === 'stages' && p.status === 'active') seedRem(p); });
+  const relevantRem = () => S.rem.filter(x => !x.done && (isSt() ? x.stage === S.st : x.stage == null));
+  function remInfo(x) {
+    const cur = workRow();
+    if (x.kind === 'row') {
+      const d = x.at - cur;
+      return {due:d === 0, ord:d, txt:d > 0 ? `в ряду ${x.at} · через ${rw(d)}` : d === 0 ? 'в этом ряду' : `ряд ${x.at} уже прошёл`};
+    }
+    if (x.kind === 'every') {
+      if (cur < x.at) return {due:false, ord:x.at - cur, txt:`каждые ${rw(x.every)}, с ряда ${x.at}`};
+      const k = (cur - x.at) % x.every;
+      return {due:k === 0, ord:k ? x.every - k : 0, txt:k === 0 ? `в этом ряду (каждые ${rw(x.every)})` : `через ${rw(x.every - k)} (каждые ${rw(x.every)})`};
+    }
+    const e = estimate();
+    if (!e) return {due:false, ord:999, txt:`на ${fmtCm(x.at)} см${fromTxt() ? ' ' + fromTxt() : ''} · сделай замер, чтобы я подсказала когда`};
+    const left = x.at - e.cmNow;
+    if (left <= 0.3) return {due:true, ord:0, txt:`сейчас — на ${fmtCm(x.at)} см (у тебя ≈ ${fmtCm(e.cmNow)})`};
+    const n = e.r ? Math.ceil(left * e.r.v) : null;
+    return {due:false, ord:n == null ? 500 : n, txt:`на ${fmtCm(x.at)} см${n != null ? ` · ≈ через ${rw(n)}` : ''}`};
+  }
+  function checkDue(before) {
+    if (workRow() === before) return;
+    const due = relevantRem().filter(x => x.kind !== 'cm' && remInfo(x).due);
+    const e = estimate();
+    if (e) for (const x of relevantRem()) if (x.kind === 'cm' && !x.fired && e.cmNow >= x.at - 0.3) { x.fired = true; due.push(x); }
+    if (due.length) setTimeout(() => { flash(due.map(x => x.text).join(' · '), 2800, true); buzz([80, 60, 80]); }, 1350);
+  }
+
+  // ---------- карточка «О проекте» ----------
+  function yarnHTML(p, pt) {
+    return pt.yarn.map(y => {
+      const vals = String(y.g).replace(/[{}]/g, '').split('|').map(Number);
+      const one = vals.length === 1 ? vals[0] : (p.size != null ? vals[p.size] : null);
+      const g = one != null ? `${one}&nbsp;г` : `${Math.min(...vals)}–${Math.max(...vals)}&nbsp;г`;
+      let balls = '';
+      if (y.ball) {
+        if (one != null) { const b = Math.ceil(one / y.ball); balls = ` · ${b} ${pl(b, ['моток', 'мотка', 'мотков'])} по&nbsp;${y.ball}&nbsp;г`; }
+        else balls = ` · ${Math.ceil(Math.min(...vals) / y.ball)}–${Math.ceil(Math.max(...vals) / y.ball)} мотков по&nbsp;${y.ball}&nbsp;г`;
+      }
+      return `<li${y.alt ? ' class="alt"' : ''}><b>${esc(y.n)}</b> — ${g}${balls}<small>${esc(y.c)}</small></li>`;
+    }).join('');
+  }
+  function aboutHTML(p) {
+    const pt = pat(p); if (!pt || pt.custom) return '';
+    const ph = photoOf(p);
+    const sizes = pt.sizes ? `<h3>Размер</h3><div class="sizes">${pt.sizes.map((s, j) => `<button type="button" data-size="${j}" aria-pressed="${p.size === j}">${esc(s)}</button>`).join('')}</div>${p.size == null ? '<p class="note">Выбери размер — пряжа и числа в этапах пересчитаются под него.</p>' : ''}` : '';
+    return `<div class="about">
+        <div class="ph">${ph ? `<img src="${ph}" alt="${esc(pt.name)}">` : '<div class="noph">нет фото</div>'}<label class="phbtn">${ph ? 'Заменить фото' : 'Добавить фото'}<input type="file" accept="image/*" class="vh" data-photo="${esc(p.pkey || p.id)}"></label></div>
+        <div><div class="lbl">${esc(pt.drops)} · ${esc(pt.craft)}</div><p class="what">${esc(pt.what)}</p>${pt.measures ? `<p class="note">${esc(Rz(pt.measures, p))}</p>` : ''}</div>
+      </div>
+      ${sizes}
+      <h3>Пряжа</h3><ul class="mat">${yarnHTML(p, pt)}</ul>
+      <h3>Инструменты</h3><ul class="mat">${pt.tools.map(t => `<li>${esc(Rz(t, p))}</li>`).join('')}</ul>
+      ${pt.extra && pt.extra.length ? `<h3>Ещё понадобится</h3><ul class="mat">${pt.extra.map(t => `<li>${esc(Rz(t, p))}</li>`).join('')}</ul>` : ''}
+      <p class="note">Плотность: ${esc(pt.gauge)}</p>
+      ${pt.note ? `<p class="warn">${esc(pt.note)}</p>` : ''}`;
+  }
+  const tgtTxt = (sg, p = S) => sg.rows ? `${Rz(sg.rows, p)} ${pl(num1(sg.rows, p) || 5, ['ряд', 'ряда', 'рядов'])}` : sg.cm ? `до ${Rz(sg.cm, p)} см${sg.from ? ' ' + sg.from : ''}` : '';
+  function stagesHTML(p, clickable) {
+    const list = pat(p).stages;
+    return list.map((s, j) => {
+      const cls = [p.sdone[j] ? 'ok' : '', clickable && j === p.st && p.status === 'active' ? 'cur' : ''].join(' ').trim();
+      const t = tgtTxt(s, p);
+      return `<li><button type="button" data-j="${j}" class="${cls}"${clickable ? '' : ' tabindex="-1"'}><i>${p.sdone[j] ? '✓' : j + 1}</i><span>${esc(s.t)}${t ? `<small>${esc(t)}</small>` : ''}</span></button></li>`;
+    }).join('');
+  }
+
+  // ---------- отрисовка счётчика ----------
   function paintTime(now) {
-    const ms = active(now);
+    const ms = active(S, now);
     $('clockT').textContent = fmtClock(ms);
     $('clock').classList.toggle('on', !!S.run);
     $('total').textContent = fmtDur(ms);
   }
+  function setLabels(o) {
+    $('nowLbl').textContent = o.now; $('rowLbl').textContent = o.lbl; $('rowNum').textContent = o.num; $('ofGoal').textContent = o.of || '';
+    $('help').textContent = o.help; $('undo').textContent = o.undo; $('finish').textContent = o.fin;
+  }
 
-  function render() {
+  function renderRows() {
     const r = row(), a = add(r), t = prev() + a, n = r + 1, an = add(n);
     document.body.classList.toggle('no', a === 0);
-    $('rowNum').textContent = r;
+    setLabels({now:'Сейчас вяжешь', lbl:'Ряд', num:r, help:'Нажимай на каждую петлю — ряд закроется сам', undo:'−1 петля', fin:'Ряд готов ✓'});
+    $('badge').hidden = S.inc === 0;
     $('badge').textContent = a ? pr(a) : 'Без прибавок';
+    $('desc').hidden = true;
     $('cur').textContent = S.cur;
-    $('tgt').textContent = st(t);
+    $('curSub').textContent = 'из ' + st(t);
     $('ring').style.strokeDashoffset = C * (1 - Math.min(S.cur / (t || 1), 1));
-    $('next').innerHTML = `<small>Дальше</small>Ряд ${n} · <b class="${an ? 'i' : 'n'}">${an ? pr(an) : 'без прибавок'}</b> · ${st(t + an)}`;
+    $('next').innerHTML = S.inc === 0
+      ? `<small>Дальше</small>Ряд ${n} · ${st(t)}`
+      : `<small>Дальше</small>Ряд ${n} · <b class="${an ? 'i' : 'n'}">${an ? pr(an) : 'без прибавок'}</b> · ${st(t + an)}`;
     $('undo').disabled = !S.cur && !S.done.length;
+  }
 
-    const timed = S.done.filter(d => d.ms != null);
-    const days = new Set(S.done.filter(d => d.t).map(d => dayKey(d.t))).size;
-    const parts = [];
+  function renderMotif() {
+    const pt = part(), Rn = pt.rounds.length, i = Math.min(S.rnd[pt.key] || 0, Rn - 1), made = S.made[pt.key] || 0, n = made + 1;
+    const one = cap(pt.forms[0]);
+    document.body.classList.toggle('no', second(pt));
+    $('seg').innerHTML = S.parts.map(p => `<button type="button" data-k="${p.key}" aria-pressed="${p.key === pt.key}">${esc(p.name)}<small>${S.made[p.key] || 0} из ${p.goal}</small></button>`).join('');
+    const rd = pt.rounds[i] || {n:`Круг ${i + 1}`, d:''};
+    setLabels({now:'Сейчас вяжешь' + (pt.chart ? ` · схема ${pt.chart}` : ''), lbl:one, num:n, of:`из ${pt.goal}`,
+      help:`Нажми, когда закончишь ${rd.n.startsWith('Ряд') ? 'ряд' : 'круг'}`, undo:'−1 шаг', fin:`${one} ${pt.ready} ✓`});
+    $('badge').hidden = true;
+    $('desc').hidden = false;
+    $('desc').innerHTML = `<b>${esc(rd.n)}.</b> ${esc(rd.d || 'Нажми на кнопку, когда закончишь')}`;
+    $('cur').textContent = i + 1;
+    $('curSub').textContent = `шаг из ${Rn}`;
+    $('ring').style.strokeDashoffset = C * (1 - Math.min(i / Rn, 1));
+    let nx;
+    if (i + 1 < Rn) { const r2 = pt.rounds[i + 1]; nx = `${esc(r2.n)}${r2.d ? ' · ' + esc(r2.d) : ''}`; }
+    else nx = `${one} ${n + 1}, ${esc(pt.rounds[0].n.toLowerCase())}${n + 1 > pt.goal ? ' · сверх плана' : ''}`;
+    const allMade = S.parts.every(p => (S.made[p.key] || 0) >= p.goal);
+    if (made >= pt.goal) nx = `Все ${pt.goal} ${pl(pt.goal, pt.forms)} готовы.` + (S.parts.length > 1 && !allMade ? ' Можно переключиться наверху' : '');
+    $('next').innerHTML = `<small>Дальше</small>${nx}` + (allMade && S.check.every(c => c.ok) ? '<button class="btn pri" type="button" data-act="finishProj">Отметить «Связано»</button>' : '');
+    $('undo').disabled = !(S.rnd[pt.key] || 0) && !made;
+    $('bars').innerHTML = S.parts.map(p => {
+      const m = S.made[p.key] || 0, pct = Math.min(100, Math.round(m / (p.goal || 1) * 100));
+      return `<div class="pbar"><div>${esc(p.name)}<span>${m} из ${p.goal}</span></div><div class="bar${second(p) ? ' h' : ''}"><i style="width:${pct}%"></i></div></div>`;
+    }).join('');
+    $('checkWrap').hidden = !S.check.length;
+    $('checks').innerHTML = S.check.map((c, j) => `<label class="chk"><input type="checkbox" data-j="${j}"${c.ok ? ' checked' : ''}><span>${esc(c.label)}</span></label>`).join('');
+    $('info').textContent = S.info || '';
+  }
+
+  function renderStages() {
+    const list = stages(), N = list.length;
+    if (!N) { setLabels({now:'Нет этапов', lbl:'Добавь этапы', num:'', help:'Настройки проекта → Этапы выкройки', undo:'−1 ряд', fin:'Этап готов ✓'}); $('desc').hidden = true; $('badge').hidden = true; $('next').innerHTML = ''; $('stl').innerHTML = ''; return; }
+    if (S.st >= N) S.st = N - 1;
+    const pt = pat(), i = S.st, sg = list[i], rows = S.srows[i] || 0;
+    const allDone = list.every((s, j) => S.sdone[j]);
+    document.body.classList.remove('no');
+    setLabels({now:`Этап ${i + 1} из ${N}` + (pt.sizes && S.size != null ? ` · размер ${pt.sizes[S.size]}` : ''), lbl:sg.t, num:'',
+      help:'Нажимай после каждого ряда', undo:'−1 ряд', fin:'Этап готов ✓'});
+    $('badge').hidden = true;
+    $('desc').hidden = !sg.d;
+    $('desc').innerHTML = esc(Rz(sg.d));
+    $('cur').textContent = rows;
+    const target = sg.rows ? num1(sg.rows) : null;
+    const sub = [target ? `из ${target} ${pl(target, ['ряда', 'рядов', 'рядов'])}` : pl(rows, ['ряд', 'ряда', 'рядов'])];
+    if (sg.cm) sub.push(`до ${Rz(sg.cm)} см${sg.from ? ' ' + sg.from : ''}`);
+    if (sg.rep) sub.push(`ряд узора ${(rows % sg.rep) + 1} из ${sg.rep}`);
+    $('curSub').textContent = sub.join(' · ');
+    const e = estimate();
+    const frac = target ? rows / target : sg.rep ? (rows % sg.rep) / sg.rep : (e && e.tgt ? e.cmNow / e.tgt : 0);
+    $('ring').style.strokeDashoffset = C * (1 - Math.min(Math.max(frac, 0), 1));
+    const nxt = list.findIndex((s, j) => j > i && !S.sdone[j]);
+    $('next').innerHTML = allDone ? '<small>Дальше</small>Все этапы готовы!<button class="btn pri" type="button" data-act="finishProj">Отметить «Связано»</button>'
+      : nxt >= 0 ? `<small>Дальше</small>${esc(list[nxt].t)}${tgtTxt(list[nxt]) ? ' · ' + esc(tgtTxt(list[nxt])) : ''}`
+      : '<small>Дальше</small>Это последний этап';
+    $('undo').disabled = !rows && !S.done.length;
+    $('stl').innerHTML = stagesHTML(S, true);
+  }
+
+  function renderRem() {
+    const box = $('remBox'); box.hidden = isM(); if (isM()) return;
+    const list = relevantRem().map(x => ({x, i:remInfo(x)})).sort((a, b) => (b.i.due - a.i.due) || (a.i.ord - b.i.ord));
+    $('remList').innerHTML = list.length
+      ? list.map(({x, i}) => `<li class="${i.due ? 'due' : ''}"><span>${esc(x.text)}<small>${esc(i.txt)}</small></span><button class="btn sm" type="button" data-rdone="${x.id}">${x.kind === 'every' ? 'Убрать' : 'Готово'}</button></li>`).join('')
+      : `<li class="note">${isSt() ? 'Для этого этапа напоминаний нет.' : 'Напоминаний пока нет.'}</li>`;
+    $('rAtL').textContent = rKind === 'cm' ? `На сантиметрах${fromTxt() ? ' (' + fromTxt() + ')' : ''}` : rKind === 'every' ? (isSt() ? 'Начиная с ряда этапа' : 'Начиная с ряда') : (isSt() ? 'Ряд этапа' : 'Номер ряда');
+    $('rEvL').hidden = rKind !== 'every';
+    $('rHint').textContent = rKind === 'cm' ? 'Сработает, когда по замеру дойдёшь до этой длины.' : isSt() ? `Сейчас ряд этапа ${workRow()}.` : `Сейчас ряд ${workRow()}.`;
+  }
+
+  function renderMeas() {
+    const box = $('measBox'); box.hidden = isM(); if (isM()) return;
+    const e = estimate(), tgt = targetCm(), sub = [];
+    let main;
+    if (e) {
+      main = `Сейчас ≈ ${fmtCm(e.cmNow)} см`;
+      if (tgt != null) main += e.left > 0.2 ? ` · до ${fmtCm(tgt)} см осталось ≈ ${fmtCm(e.left)} см${e.rowsLeft != null ? `, это ≈ ${rw(e.rowsLeft)}` : ''}` : ` · цель ${fmtCm(tgt)} см достигнута`;
+      const ago = curRows() - e.m.rows;
+      sub.push(`замер ${fmtCm(e.m.cm)} см ${ago > 0 ? rw(ago) + ' назад' : 'на этом ряду'}`);
+      if (e.r) sub.push(`${fmtCm(e.r.v * 10)} р. на 10 см — ${e.r.src}`);
+    } else {
+      main = tgt != null ? `Цель — ${fmtCm(tgt)} см${fromTxt() ? ' ' + fromTxt() : ''}. Измерь полотно, и я посчитаю, сколько рядов осталось.` : 'Измерь полотно — я запомню длину и посчитаю твою плотность.';
+    }
+    $('measTxt').textContent = main;
+    $('measSub').textContent = sub.join(' · ');
+    $('measHint').textContent = `Длина сейчас, см${fromTxt() ? ' (' + fromTxt() + ')' : ''}`;
+  }
+
+  function renderMine() {
+    if (document.activeElement !== $('notes')) $('notes').value = S.notes || '';
+    const list = myOf(S);
+    $('gal').innerHTML = list.map(x => `<button type="button" data-ph="${x.id}" style="background-image:url('${x.data}')" aria-label="Фото от ${esc(stamp(x.t))}"></button>`).join('')
+      + '<label>+ Фото<input type="file" accept="image/*" multiple class="vh" id="myAdd"></label>';
+  }
+
+  function renderStatsHist() {
+    const m = isM(), sgT = isSt(), pt = pat();
+    const now = Date.now(), parts = [];
     if (S.began) parts.push(`Начала ${dateFull(S.began)}`);
+    const days = new Set(S.done.filter(d => d.t).map(d => dayKey(d.t))).size;
     if (days > 1) parts.push(`вязала ${days} ${pl(days, ['день', 'дня', 'дней'])}`);
-    if (S.done.length) parts.push(rw(S.done.length));
-    if (timed.length) parts.push(`≈ ${fmtDur(timed.reduce((s, d) => s + d.ms, 0) / timed.length)} на ряд`);
+    if (m) {
+      for (const p of S.parts) {
+        const tm = S.done.filter(d => d.part === p.key && d.ms != null);
+        if (tm.length) parts.push(`≈ ${fmtDur(tm.reduce((s, d) => s + d.ms, 0) / tm.length)} на ${p.acc}`);
+      }
+    } else if (sgT) {
+      const k = pt.stages.filter((s, j) => S.sdone[j]).length;
+      parts.push(`готово ${k} из ${pt.stages.length} этапов`);
+    } else {
+      const timed = S.done.filter(d => d.ms != null);
+      if (S.done.length) parts.push(rw(nRows(S.done)));
+      if (timed.length) parts.push(`≈ ${fmtDur(timed.reduce((s, d) => s + d.ms, 0) / timed.length)} на ряд`);
+    }
     $('tinfo').textContent = parts.length ? parts.join(' · ') : 'Время начнёт идти с первого нажатия';
+    $('timeNote').hidden = S.status === 'done';
 
     const groups = [];
     for (const d of S.done.slice().reverse()) {
@@ -234,108 +1142,687 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
     }
     const items = [];
     for (const g of groups) {
-      items.push(`<li class="day"><span>${g.t ? dayLabel(g.t) : 'Без даты'}</span><span>${rw(g.rows.length)}${g.ms ? ' · ' + fmtDur(g.ms) : ''}</span></li>`);
+      let what;
+      if (m) what = S.parts.map(p => { const c = g.rows.filter(d => d.part === p.key).length; return c ? `${c} ${pl(c, p.forms)}` : ''; }).filter(Boolean).join(' · ');
+      else if (sgT) what = `${g.rows.length} ${pl(g.rows.length, ['этап', 'этапа', 'этапов'])}`;
+      else what = rw(nRows(g.rows));
+      items.push(`<li class="day"><span>${g.t ? dayLabel(g.t) : 'Без даты'}</span><span>${what}${g.ms ? ' · ' + fmtDur(g.ms) : ''}</span></li>`);
       for (const d of g.rows) {
-        items.push(`<li><span>Ряд ${d.row}${d.t ? `<small>${hm(d.t)}</small>` : ''}</span><b class="${d.add ? 'i' : 'n'}">${d.add ? '+' + d.add : 'без'}</b><span>${st(d.count)}${d.ms != null ? `<small>${fmtDur(d.ms)}</small>` : ''}</span></li>`);
+        if (m) {
+          const p = S.parts.find(x => x.key === d.part) || S.parts[0];
+          items.push(`<li><span>${cap(p.forms[0])} ${d.n}${d.t ? `<small>${hm(d.t)}</small>` : ''}</span><b class="${second(p) ? 'n' : 'i'}">${esc(p.chart || '')}</b><span>${d.ms != null ? fmtDur(d.ms) : ''}</span></li>`);
+        } else if (sgT) {
+          const title = d.title || (pt.stages[d.stage] || {t:'Этап'}).t;
+          items.push(`<li><span>${esc(title)}${d.t ? `<small>${hm(d.t)}</small>` : ''}</span><b class="i">${d.rows} р.</b><span>${d.ms != null ? fmtDur(d.ms) : ''}</span></li>`);
+        } else {
+          if (d.gap) { items.push(`<li><span>${d.from === d.row ? 'Ряд ' + d.row : `Ряды ${d.from}–${d.row}`}<small>без счётчика${d.t ? ' · записано в ' + hm(d.t) : ''}</small></span><b></b><span>${st(d.count)}</span></li>`); continue; }
+          const chip = d.add ? '+' + d.add : (S.inc ? 'без' : '');
+          items.push(`<li><span>Ряд ${d.row}${d.t ? `<small>${hm(d.t)}</small>` : ''}</span><b class="${d.add ? 'i' : 'n'}">${chip}</b><span>${st(d.count)}${d.ms != null ? `<small>${fmtDur(d.ms)}</small>` : ''}</span></li>`);
+        }
       }
     }
-    items.push(`<li class="start"><span>Ряд ${S.startRow - 1}<small>до счётчика</small></span><b></b><span>${st(S.startPrev)}</span></li>`);
+    if (!m && !sgT) items.push(`<li class="start"><span>Ряд ${S.startRow - 1} · до счётчика · ${st(S.startPrev)}</span></li>`);
+    else if (!S.done.length) items.push(`<li class="start"><span>Пока пусто — готовые ${m ? 'мотивы' : 'этапы'} появятся здесь</span></li>`);
     $('hist').innerHTML = items.join('');
-    paintTime(Date.now());
+    paintTime(now);
+  }
+
+  function render() {
+    const m = isM(), sgT = isSt(), plan = S.status === 'plan', done = S.status === 'done', pt = pat();
+    $('pName').textContent = S.name || 'Проект';
+    $('planBox').hidden = !plan;
+    $('doneBox').hidden = !done;
+    $('counterBox').hidden = plan || done;
+    $('statsBox').hidden = plan;
+    $('clock').hidden = plan || done;
+    $('delProj').disabled = P.projects.length < 2;
+    renderMine();
+    if (plan) {
+      document.body.classList.remove('no');
+      $('planAbout').innerHTML = aboutHTML(S);
+      $('planStages').innerHTML = sgT ? stagesHTML(S, false) : '';
+      const need = pt && pt.sizes && S.size == null;
+      $('startBtn').disabled = !!need; $('startNote').hidden = !need;
+      return;
+    }
+    if (done) {
+      document.body.classList.remove('no');
+      const fin = S.finished || Date.now(), d0 = S.began || S.created || fin;
+      const days = Math.max(1, Math.round((fin - d0) / 864e5));
+      $('doneDate').textContent = dateFull(fin);
+      $('doneInfo').textContent = `Начала ${dateFull(d0)} · ${days} ${pl(days, ['день', 'дня', 'дней'])} · всего ${fmtDur(active(S, Date.now()))} вязания`;
+      renderStatsHist();
+      return;
+    }
+    $('seg').hidden = !m || S.parts.length < 2;
+    $('prog').hidden = !(m || sgT);
+    $('motifProg').hidden = !m; $('stageProg').hidden = !sgT;
+    $('aboutDet').hidden = !pt || pt.custom;
+    if (pt && !pt.custom) $('aboutIn').innerHTML = aboutHTML(S);
+    if (m) renderMotif(); else if (sgT) renderStages(); else renderRows();
+    renderRem(); renderMeas(); renderStatsHist();
+  }
+
+  // ---------- проекты ----------
+  function cardHTML(p, now) {
+    const pt = pat(p), mine = myOf(p), ph = (p.status === 'done' && mine.length ? mine[mine.length - 1].data : null) || photoOf(p) || (mine.length ? mine[mine.length - 1].data : null);
+    const tm = active(p, now);
+    let line, sub, tag = '';
+    if (p.status === 'plan') {
+      line = pt && !pt.custom ? `${pt.drops} · ${pt.craft}` : 'Своя выкройка';
+      sub = pt && pt.sizes ? (p.size != null ? `размер ${pt.sizes[p.size]}` : 'размер не выбран') : '';
+    } else if (p.status === 'done') {
+      line = `Связано ${dateFull(p.finished || now)}`;
+      sub = tm ? `всего ${fmtDur(tm)}` : '';
+      tag = '<em class="d">готово</em>';
+    } else {
+      const lastT = p.done.length ? p.done[p.done.length - 1].t : p.last;
+      const s2 = [tm ? 'всего ' + fmtDur(tm) : 'ещё не начат'];
+      if (lastT) s2.push('последний раз ' + dayLabel(lastT).toLowerCase());
+      sub = s2.join(' · ');
+      if (p.type === 'motifs') line = cap(p.parts.map(x => `${x.name.toLowerCase()} ${(p.made || {})[x.key] || 0}/${x.goal}`).join(' · '));
+      else if (p.type === 'stages') { const N = pt.stages.length, i = Math.min(p.st, Math.max(N - 1, 0)); line = N ? `Этап ${i + 1} из ${N} · ${pt.stages[i].t}` : 'Этапов пока нет'; }
+      else line = `Ряд ${lastRowOf(p) + 1} · ${st(prevOf(p))} на спицах`;
+      if (p.id === S.id) tag = '<em>сейчас</em>';
+    }
+    return `<li><button class="pcard${ph ? ' th' : ''}${p.id === S.id && p.status === 'active' ? ' on' : ''}" data-id="${p.id}">${ph ? `<img src="${ph}" alt="">` : ''}<div>${tag}<b>${esc(p.name || 'Проект')}</b><span>${esc(line)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</div></button></li>`;
+  }
+  function renderProjects() {
+    const now = Date.now(), by = s => P.projects.filter(p => p.status === s);
+    $('plist').innerHTML = by('active').map(p => cardHTML(p, now)).join('') || '<li class="note">Пока ничего — начни проект из планов.</li>';
+    $('planList').innerHTML = by('plan').map(p => cardHTML(p, now)).join('');
+    $('doneList').innerHTML = by('done').map(p => cardHTML(p, now)).join('');
+    $('planH').hidden = !by('plan').length; $('doneH').hidden = !by('done').length;
+    $('bkBanner').hidden = now - (P.lastExport || P.firstRun) < WEEK;
+  }
+
+  // ---------- покупки и запас ----------
+  const normN = n => String(n || '').replace(/^или\s+/i, '').trim().toLowerCase();
+  const colorCode = c => { const s = String(c || '').split(' · ')[0]; const m = s.match(/цвет\s*(\d+)/i); return m ? m[1] : s.trim().toLowerCase(); };
+  const yKey = (n, c) => normN(n) + '|' + colorCode(c);
+  const shopOn = p => p.inShop != null ? p.inShop : p.status === 'active';
+  function needs() {
+    const Y = new Map(), T = new Map(), X = [];
+    for (const p of P.projects) {
+      const pt = pat(p);
+      if (!pt || pt.custom || !pt.yarn.length || p.status === 'done' || !shopOn(p) || (pt.sizes && p.size == null)) continue;
+      for (const y of pt.yarn) {
+        if (y.alt) continue;
+        const vals = String(y.g).replace(/[{}]/g, '').split('|').map(Number), g = vals.length === 1 ? vals[0] : vals[p.size];
+        const k = yKey(y.n, y.c), o = Y.get(k) || {n:y.n, c:y.c.split(' · ')[0], ball:y.ball, g:0, by:[]};
+        o.g += g; o.by.push(`${p.name} — ${g} г`); Y.set(k, o);
+      }
+      for (const t of pt.tools) { const tt = Rz(t, p); if (!T.has(tt)) T.set(tt, []); T.get(tt).push(p.name); }
+      for (const e of pt.extra || []) X.push({t:Rz(e, p), p:p.name});
+    }
+    return {Y, T, X};
+  }
+  const haveG = k => P.stash.yarn.filter(s => yKey(s.n, s.c) === k).reduce((a, s) => a + (+s.g || 0), 0);
+  function allTools() {
+    const set = new Set();
+    for (const pt of PATTERNS) for (const t of pt.tools || []) set.add(t);
+    for (const t of P.stash.custom) set.add(t);
+    return [...set];
+  }
+  function buyLines() {
+    const {Y, T, X} = needs(), lines = [];
+    for (const [k, o] of Y) {
+      const have = haveG(k), buy = Math.max(0, o.g - have);
+      const skeins = o.ball ? Math.ceil(buy / o.ball) : null;
+      lines.push({ok:buy === 0, html:`<b>${esc(o.n)}</b>, ${esc(o.c)} — ${buy === 0 ? `хватает (есть ${have} г)` : `купить ${buy}&nbsp;г${skeins ? ` = ${skeins} ${pl(skeins, ['моток', 'мотка', 'мотков'])} по&nbsp;${o.ball}&nbsp;г` : ''}`}<small>нужно ${o.g} г: ${esc(o.by.join(', '))}${have && buy ? ` · есть ${have} г` : ''}</small>`,
+        txt:buy === 0 ? '' : `${o.n}, ${o.c}: ${buy} г${skeins ? ` (${skeins} мот. по ${o.ball} г)` : ''}`});
+    }
+    for (const [t, ps] of T) if (!P.stash.tools[t]) lines.push({ok:false, html:`${esc(t)}<small>для: ${esc([...new Set(ps)].join(', '))}</small>`, txt:t});
+    for (const x of X) lines.push({ok:false, html:`${esc(x.t)}<small>для: ${esc(x.p)}</small>`, txt:`${x.t} (${x.p})`});
+    return lines;
+  }
+  function renderShop() {
+    const cand = P.projects.filter(p => { const pt = pat(p); return pt && !pt.custom && pt.yarn.length && p.status !== 'done'; });
+    $('shopProj').innerHTML = cand.map(p => {
+      const pt = pat(p), need = pt.sizes && p.size == null;
+      if (need) return `<div class="chk"><input type="checkbox" disabled><span>${esc(p.name)}<small>выбери размер, чтобы посчитать:</small><select class="shsz" data-shopsize="${p.id}" aria-label="Размер для ${esc(p.name)}"><option value="">размер…</option>${pt.sizes.map((z, j) => `<option value="${j}">${esc(z)}</option>`).join('')}</select></span></div>`;
+      return `<label class="chk"><input type="checkbox" data-shop="${p.id}"${shopOn(p) ? ' checked' : ''}><span>${esc(p.name)}<small>${[pt.sizes ? 'размер ' + pt.sizes[p.size] : '', p.status === 'plan' ? 'в планах' : 'вяжу сейчас'].filter(Boolean).join(' · ')}</small></span></label>`;
+    }).join('') || '<p class="note">Нет проектов с пряжей из выкроек.</p>';
+    const lines = buyLines();
+    $('buyList').innerHTML = lines.length ? lines.map(l => `<li class="${l.ok ? 'ok' : ''}">${l.html}</li>`).join('') : '<li class="note">Отметь проекты выше — здесь появится, что купить.</li>';
+    $('stashList').innerHTML = P.stash.yarn.length ? P.stash.yarn.map(s => `<li><span>${esc(s.n)}<small>${esc(s.c || 'цвет не указан')}</small></span><input type="number" inputmode="numeric" min="0" value="${+s.g || 0}" data-sg="${s.id}" aria-label="граммы"><button class="btn sm" type="button" data-sdel="${s.id}" aria-label="Убрать">✕</button></li>`).join('') : '<li class="note" style="display:block">Пока пусто.</li>';
+    $('toolList').innerHTML = allTools().map(t => `<label class="chk"><input type="checkbox" data-tool="${esc(t)}"${P.stash.tools[t] ? ' checked' : ''}><span>${esc(t)}</span></label>`).join('');
+    const names = new Set(), colors = new Set();
+    for (const pt of PATTERNS) for (const y of pt.yarn || []) { names.add(y.n.replace(/^или\s+/i, '')); colors.add(y.c.split(' · ')[0]); }
+    $('yarnNames').innerHTML = [...names].map(n => `<option value="${esc(n)}">`).join('');
+    $('yarnColors').innerHTML = [...colors].map(c => `<option value="${esc(c)}">`).join('');
+  }
+
+  // ---------- редактор своих этапов ----------
+  const blankStage = () => ({id:uid(), t:'', d:'', cm:'', rows:''});
+  function edHTML(list) {
+    return list.map(s => {
+      const k = s.rows ? 'rows' : s.cm ? 'cm' : (s.k || 'cm');
+      return `<div class="ed" data-id="${esc(s.id)}">
+        <input class="inp et" value="${esc(s.t)}" placeholder="Название, например «Спинка»" aria-label="Название этапа">
+        <div class="ed2"><select class="ek" aria-label="Цель"><option value="cm"${k === 'cm' ? ' selected' : ''}>до … см</option><option value="rows"${k === 'rows' ? ' selected' : ''}>… рядов</option><option value="none"${k === 'none' ? ' selected' : ''}>без цели</option></select><input class="inp ev" type="text" inputmode="decimal" autocomplete="off" value="${esc(String(s.rows || s.cm || '').replace(',', '.'))}" aria-label="Число"></div>
+        <input class="inp ed3" value="${esc(s.d)}" placeholder="Заметка: набор, прибавки, узор…" aria-label="Заметка">
+        <div class="ed4"><button type="button" data-ed="up" aria-label="Выше">↑</button><button type="button" data-ed="down" aria-label="Ниже">↓</button><button type="button" data-ed="del">Удалить</button></div>
+      </div>`;
+    }).join('');
+  }
+  function readEd(root) {
+    return [...root.querySelectorAll('.ed')].map(el => {
+      const k = el.querySelector('.ek').value, v = el.querySelector('.ev').value.trim();
+      const s = {id:el.dataset.id, t:el.querySelector('.et').value.trim(), d:el.querySelector('.ed3').value.trim()};
+      if (k === 'cm' && toNum(v) != null) s.cm = String(toNum(v)).replace('.', ',');
+      if (k === 'rows' && toNum(v) != null) s.rows = String(Math.max(1, Math.round(toNum(v))));
+      return s;
+    }).filter(s => s.t || s.cm || s.rows || s.d).map(s => (s.t ? s : Object.assign(s, {t:'Этап'})));
+  }
+  function edClick(e) {
+    const b = e.target.closest('button[data-ed]'); if (!b) return;
+    const el = b.closest('.ed');
+    if (b.dataset.ed === 'up' && el.previousElementSibling) el.parentNode.insertBefore(el, el.previousElementSibling);
+    if (b.dataset.ed === 'down' && el.nextElementSibling) el.parentNode.insertBefore(el.nextElementSibling, el);
+    if (b.dataset.ed === 'del') el.remove();
+  }
+  const edAdd = root => root.insertAdjacentHTML('beforeend', edHTML([blankStage()]));
+  function applyStages(newSt) {
+    const old = S.custom.stages, map = old.map(s => newSt.findIndex(x => x.id === s.id));
+    const sdone = [], srows = {};
+    old.forEach((s, j) => { const k = map[j]; if (k >= 0) { if (S.sdone[j]) sdone[k] = true; if (S.srows[j]) srows[k] = S.srows[j]; } });
+    S.done.forEach(d => { if (d.stage != null) { d.title = d.title || (old[d.stage] || {}).t; d.stage = d.stage >= 0 && map[d.stage] != null ? map[d.stage] : -1; } });
+    S.meas.forEach(m => { if (m.stage != null) m.stage = m.stage >= 0 && map[m.stage] != null ? map[m.stage] : -1; });
+    S.rem.forEach(x => { if (x.stage != null) x.stage = x.stage >= 0 && map[x.stage] != null ? map[x.stage] : -1; });
+    const cur = map[S.st];
+    S.custom.stages = newSt; S.sdone = sdone; S.srows = srows;
+    const firstOpen = newSt.findIndex((s, j) => !sdone[j]);
+    S.st = cur != null && cur >= 0 && !sdone[cur] ? cur : Math.max(0, firstOpen);
+  }
+
+  // ---------- переключение вкладок и проектов ----------
+  function show(v) {
+    P.view = v;
+    $('vCounter').hidden = v !== 'counter';
+    $('vProjects').hidden = v !== 'projects';
+    $('vShop').hidden = v !== 'shop';
+    document.querySelectorAll('.tabs button').forEach(b => { if (b.dataset.v === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    rerender();
+    window.scrollTo(0, 0);
+    save();
+  }
+  function rerender() { if (P.view === 'projects') renderProjects(); else if (P.view === 'shop') renderShop(); else render(); }
+  function activate(id) {
+    if (id === S.id) return;
+    stop(S, Date.now());
+    S = P.projects.find(p => p.id === id) || S;
+    P.active = S.id;
+    $('settings').open = false; $('aboutDet').open = false; $('remAdd').open = false;
+    save();
   }
 
   let ft;
-  function flash(msg) {
-    const f = $('flash'); f.textContent = msg; f.classList.add('show');
-    clearTimeout(ft); ft = setTimeout(() => f.classList.remove('show'), 1300);
+  function flash(msg, ms = 1300, rem = false) {
+    const f = $('flash'); f.textContent = msg; f.classList.toggle('rem', rem); f.classList.add('show');
+    clearTimeout(ft); ft = setTimeout(() => f.classList.remove('show'), ms);
   }
   const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
-
   let wl = null;
   async function wake() {
     try { if (!wl && navigator.wakeLock) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } } catch (e) {}
   }
 
+  // ---------- действия счётчика ----------
   function completeRow(now) {
-    const r = row(), a = add(r), act = active(now);
+    const r = row(), a = add(r), act = active(S, now);
     S.done.push({row:r, add:a, count:prev() + a, t:now, ms:Math.max(act - S.rowStart, 0)});
+    S.rowStart = act; S.cur = 0;
+    flash(`Ряд ${r} готов`); buzz([30, 50, 30]);
+  }
+  function completeMotif(now) {
+    const pt = part(), act = active(S, now), n = (S.made[pt.key] || 0) + 1;
+    S.made[pt.key] = n; S.rnd[pt.key] = 0;
+    S.done.push({part:pt.key, n, t:now, ms:Math.max(act - S.rowStart, 0)});
     S.rowStart = act;
+    flash(`${cap(pt.forms[0])} ${n} ${pt.ready}`); buzz([30, 50, 30]);
+  }
+  function completeStage(now) {
+    const list = stages(), i = S.st, act = active(S, now);
+    S.sdone[i] = true;
+    S.done.push({stage:i, title:list[i].t, rows:S.srows[i] || 0, t:now, ms:Math.max(act - S.rowStart, 0)});
+    S.rowStart = act;
+    flash(`${list[i].t} — готово`); buzz([30, 50, 30]);
+    let nx = list.findIndex((s, j) => j > i && !S.sdone[j]);
+    if (nx < 0) nx = list.findIndex((s, j) => !S.sdone[j]);
+    if (nx >= 0) S.st = nx;
+  }
+  function jumpTo(r, p, now) {
+    while (S.done.length && S.done[S.done.length - 1].row >= r) S.done.pop();
+    const last = lastRowOf(S);
+    if (!S.done.length && r <= S.startRow) { S.startRow = r; S.startPrev = p; }
+    else if (last === r - 1) { if (S.done.length) S.done[S.done.length - 1].count = p; else S.startPrev = p; }
+    else S.done.push({row:r - 1, from:last + 1, gap:true, count:p, t:now});
     S.cur = 0;
-    flash(`Ряд ${r} готов`);
-    buzz([30, 50, 30]);
+    S.rowStart = active(S, now);
+  }
+  function finishProject() {
+    const now = Date.now();
+    stop(S, now); S.status = 'done'; S.finished = now;
+    $('settings').open = false; save(); render(); window.scrollTo(0, 0);
   }
 
   $('tap').addEventListener('click', () => {
-    const now = Date.now(); touch(now); wake();
-    const t = prev() + add(row());
-    S.cur++;
-    if (S.cur >= t) completeRow(now); else buzz(8);
+    if (isSt() && !stages().length) return;
+    const now = Date.now(), before = workRow(); touch(now); wake();
+    if (isM()) {
+      const pt = part();
+      S.rnd[pt.key] = (S.rnd[pt.key] || 0) + 1;
+      if (S.rnd[pt.key] >= pt.rounds.length) completeMotif(now);
+      else { flash(`${pt.rounds[S.rnd[pt.key] - 1].n} готов`); buzz(15); }
+    } else if (isSt()) {
+      const sg = stages()[S.st], target = sg.rows ? num1(sg.rows) : null;
+      S.srows[S.st] = (S.srows[S.st] || 0) + 1;
+      if (target && S.srows[S.st] >= target) completeStage(now); else buzz(8);
+    } else {
+      const t = prev() + add(row());
+      S.cur++;
+      if (S.cur >= t) completeRow(now); else buzz(8);
+    }
+    if (!isM()) checkDue(before);
     save(); render();
   });
-
-  $('finish').addEventListener('click', () => { const now = Date.now(); touch(now); completeRow(now); save(); render(); });
-
+  $('finish').addEventListener('click', () => {
+    if (isSt() && !stages().length) return;
+    const now = Date.now(), before = workRow(); touch(now);
+    if (isM()) completeMotif(now); else if (isSt()) completeStage(now); else completeRow(now);
+    if (!isM() && !isSt()) checkDue(before);
+    save(); render();
+  });
   $('undo').addEventListener('click', () => {
     const now = Date.now(); touch(now);
-    if (S.cur > 0) S.cur--;
-    else if (S.done.length) { const d = S.done.pop(); S.cur = Math.max(d.count - 1, 0); S.rowStart = Math.max(S.rowStart - (d.ms || 0), 0); }
+    if (isM()) {
+      const pt = part(), k = pt.key;
+      if ((S.rnd[k] || 0) > 0) S.rnd[k]--;
+      else if ((S.made[k] || 0) > 0) {
+        let idx = -1;
+        for (let j = S.done.length - 1; j >= 0; j--) if (S.done[j].part === k) { idx = j; break; }
+        if (idx >= 0) { const d = S.done.splice(idx, 1)[0]; if (idx === S.done.length) S.rowStart = Math.max(S.rowStart - (d.ms || 0), 0); }
+        S.made[k]--; S.rnd[k] = pt.rounds.length - 1;
+      }
+    } else if (isSt()) {
+      if ((S.srows[S.st] || 0) > 0) S.srows[S.st]--;
+      else if (S.done.length) {
+        const d = S.done.pop();
+        if (d.stage >= 0) { S.sdone[d.stage] = false; S.st = d.stage; S.srows[d.stage] = d.rows; }
+        S.rowStart = Math.max(S.rowStart - (d.ms || 0), 0);
+      }
+    } else {
+      if (S.cur > 0) S.cur--;
+      else if (S.done.length) { const d = S.done.pop(); S.cur = d.gap ? 0 : Math.max(d.count - 1, 0); S.rowStart = Math.max(S.rowStart - (d.ms || 0), 0); }
+    }
     save(); render();
   });
 
+  $('seg').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; S.part = b.dataset.k; save(); render(); });
+  $('checks').addEventListener('change', e => { const j = +e.target.dataset.j; if (!S.check[j]) return; S.check[j].ok = e.target.checked; save(); render(); });
+  $('stl').addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if (!b) return; S.st = +b.dataset.j; save(); render(); window.scrollTo({top:0, behavior:'smooth'}); });
+  document.addEventListener('click', e => {
+    const sz = e.target.closest('button[data-size]');
+    if (sz) { S.size = +sz.dataset.size; if (S.status === 'active') seedRem(S); save(); render(); return; }
+    const fa = e.target.closest('[data-act="finishProj"]');
+    if (fa) { finishProject(); return; }
+  });
+  document.addEventListener('change', async e => {
+    const el = e.target; if (!el.matches || !el.matches('input[data-photo]') || !el.files[0]) return;
+    try { const data = await readPhoto(el.files[0]); if (!putPhoto(el.dataset.photo, data)) flash('Не хватило места для фото'); } catch (err) { flash('Не получилось открыть фото'); }
+    render();
+  });
+  $('bulkPhoto').addEventListener('change', async e => {
+    const files = [...e.target.files]; let ok = 0; const miss = [];
+    for (const f of files) {
+      const key = f.name.replace(/\.[^.]+$/, '').toLowerCase().trim();
+      if (!PAT[key]) { miss.push(f.name); continue; }
+      try { if (putPhoto(key, await readPhoto(f))) ok++; } catch (err) { miss.push(f.name); }
+    }
+    $('bulkMsg').textContent = `Добавлено фото: ${ok}.` + (miss.length ? ` Не узнала: ${miss.slice(0, 3).join(', ')}${miss.length > 3 ? '…' : ''} — такие лучше добавить в карточке проекта.` : '');
+    e.target.value = '';
+    renderProjects();
+  });
+
+  // напоминания
+  let rKind = 'row';
+  $('rKind').addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b) return;
+    rKind = b.dataset.k;
+    $('rKind').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    renderRem();
+  });
+  $('remAdd').addEventListener('toggle', () => { if ($('remAdd').open && !$('rAt').value) $('rAt').value = rKind === 'cm' ? '' : workRow() + 1; });
+  $('remForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const text = $('rText').value.trim(), at = toNum($('rAt').value), ev = parseInt($('rEv').value, 10);
+    if (!text || at == null || (rKind === 'every' && !(ev >= 1))) { $('rHint').textContent = 'Заполни текст и число.'; return; }
+    S.rem.push({id:uid(), text, kind:rKind, at:rKind === 'cm' ? at : Math.round(at), every:rKind === 'every' ? ev : undefined, stage:isSt() ? S.st : null, done:false});
+    $('rText').value = ''; $('rAt').value = ''; $('rEv').value = ''; $('remAdd').open = false;
+    save(); render();
+  });
+  $('remList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-rdone]'); if (!b) return;
+    const x = S.rem.find(r => r.id === b.dataset.rdone); if (!x) return;
+    if (x.kind === 'every') S.rem = S.rem.filter(r => r !== x); else x.done = true;
+    save(); render();
+  });
+
+  // замеры
+  $('measForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const cm = toNum($('measIn').value); if (cm == null || cm < 0) return;
+    const before = estimate();
+    S.meas.push({t:Date.now(), cm, stage:curStage(), rows:curRows()});
+    $('measIn').value = '';
+    const due = relevantRem().filter(x => x.kind === 'cm' && !x.fired && cm >= x.at - 0.3);
+    due.forEach(x => { x.fired = true; });
+    save(); render();
+    if (due.length) { flash(due.map(x => x.text).join(' · '), 2800, true); buzz([80, 60, 80]); }
+    else { const e2 = estimate(); if (e2 && e2.rowsLeft != null && e2.left > 0.2) flash(`Осталось ≈ ${rw(e2.rowsLeft)}`, 1800); }
+  });
+  $('measList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-mdel]'); if (!b) return;
+    S.meas = S.meas.filter(m => String(m.t) !== b.dataset.mdel); save(); fillSettings(); render();
+  });
+
+  // заметки и свои фото
+  let notesT;
+  $('notes').addEventListener('input', () => { clearTimeout(notesT); const p = S, v = $('notes').value; notesT = setTimeout(() => { p.notes = v; save(); }, 400); });
+  $('notes').addEventListener('blur', () => { clearTimeout(notesT); S.notes = $('notes').value; save(); });
+  $('gal').addEventListener('change', async e => {
+    if (e.target.id !== 'myAdd') return;
+    const files = [...e.target.files]; let ok = 0;
+    for (const f of files) {
+      try {
+        const o = {id:uid(), pid:S.id, t:Date.now(), data:await readPhoto(f, 900)};
+        await idb.put(o); (MY[S.id] = MY[S.id] || []).push(o); ok++;
+      } catch (err) {}
+    }
+    $('galMsg').textContent = ok === files.length ? '' : 'Часть фото сохранить не получилось.';
+    renderMine();
+  });
+  let viewId = null;
+  $('gal').addEventListener('click', e => {
+    const b = e.target.closest('button[data-ph]'); if (!b) return;
+    const x = myOf(S).find(p => p.id === b.dataset.ph); if (!x) return;
+    viewId = x.id; $('vImg').src = x.data; $('vDate').textContent = stamp(x.t); $('vDel').textContent = 'Удалить'; $('viewer').hidden = false;
+  });
+  $('vClose').addEventListener('click', () => { $('viewer').hidden = true; viewId = null; });
+  $('vDel').addEventListener('click', async () => {
+    if ($('vDel').textContent !== 'Точно удалить?') { $('vDel').textContent = 'Точно удалить?'; return; }
+    try { await idb.del(viewId); } catch (e) {}
+    MY[S.id] = (MY[S.id] || []).filter(p => p.id !== viewId);
+    $('viewer').hidden = true; viewId = null; renderMine();
+  });
+
+  $('startBtn').addEventListener('click', () => {
+    const pt = pat(); if (pt && pt.sizes && S.size == null) return;
+    S.status = 'active'; seedRem(S); save(); render(); window.scrollTo(0, 0);
+  });
   $('clock').addEventListener('click', () => {
-    const now = Date.now(); settle(now);
-    if (S.run) { S.total += Math.max(now - S.run, 0); S.run = null; }
+    const now = Date.now();
+    if (S.run) stop(S, now);
     else { S.run = now; S.last = now; if (!S.began) S.began = now; wake(); }
     save(); render();
   });
+  $('projBtn').addEventListener('click', () => show('projects'));
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
+  const openCard = e => { const b = e.target.closest('.pcard'); if (!b) return; activate(b.dataset.id); show('counter'); };
+  ['plist', 'planList', 'doneList'].forEach(id => $(id).addEventListener('click', openCard));
 
+  // новый проект
   const num = (id, min) => { const v = parseInt($(id).value, 10); return Number.isFinite(v) && v >= min ? v : null; };
+  let nType = 'rows';
+  $('nType').addEventListener('click', e => {
+    const b = e.target.closest('button[data-t]'); if (!b) return;
+    nType = b.dataset.t;
+    $('nType').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    $('nRows').hidden = nType !== 'rows'; $('nMot').hidden = nType !== 'motifs'; $('nSt').hidden = nType !== 'stages';
+    if (nType === 'stages' && !$('nEd').children.length) $('nEd').innerHTML = edHTML([blankStage(), blankStage()]);
+  });
+  $('nEd').addEventListener('click', edClick);
+  $('nEdAdd').addEventListener('click', () => edAdd($('nEd')));
+  $('addBtn').addEventListener('click', () => { $('addForm').hidden = false; $('addBtn').hidden = true; $('nName').focus(); });
+  $('addCancel').addEventListener('click', () => { $('addForm').hidden = true; $('addBtn').hidden = false; $('addForm').reset(); $('nEd').innerHTML = ''; });
+  $('addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const base = {id:'p' + Date.now(), created:Date.now(), name:$('nName').value.trim() || 'Новый проект'};
+    let p;
+    if (nType === 'motifs') {
+      const Rn = num('nR', 1) ?? 4;
+      p = Object.assign(BASE(), base, {type:'motifs', part:'m', made:{m:0}, rnd:{m:0}, check:[],
+        parts:[{key:'m', name:'Мотивы', forms:['мотив', 'мотива', 'мотивов'], acc:'мотив', ready:'готов', chart:'', goal:num('nGoal', 1) ?? 20,
+                rounds:Array.from({length:Rn}, (_, j) => ({n:`Круг ${j + 1}`, d:''}))}]});
+    } else if (nType === 'stages') {
+      const list = readEd($('nEd'));
+      if (!list.length) { $('nEd').insertAdjacentHTML('beforebegin', ''); flash('Добавь хотя бы один этап'); return; }
+      p = Object.assign(BASE(), base, {type:'stages', st:0, srows:{}, sdone:[], custom:{rp:toNum($('nRp').value), stages:list}});
+    } else {
+      p = Object.assign(BASE(), base, {startRow:num('nRow', 1) ?? 1, startPrev:num('nPrev', 0) ?? 0,
+        inc:num('nInc', 0) ?? 0, anchor:num('nAnc', 1) ?? 1, period:num('nPer', 0) ?? 0});
+    }
+    P.projects.push(p);
+    activate(p.id);
+    $('addForm').reset(); $('addForm').hidden = true; $('addBtn').hidden = false; $('nEd').innerHTML = '';
+    show('counter');
+  });
+
+  // настройки
   function noteUpd() {
     const list = [];
-    if (S.period > 0) for (let k = 0; k < 4; k++) list.push(S.anchor + k * S.period);
-    $('sNote').textContent = list.length ? `Ряды без прибавок: ${list.join(', ')}…` : 'Рядов без прибавок нет';
+    if (S.inc > 0 && S.period > 0) for (let k = 0; k < 4; k++) list.push(S.anchor + k * S.period);
+    $('sNote').textContent = S.inc === 0 ? 'Без прибавок: просто считаем ряды и петли' : list.length ? `Ряды без прибавок: ${list.join(', ')}…` : 'Прибавки в каждом ряду';
   }
   function fillSettings() {
-    $('sInc').value = S.inc; $('sAnchor').value = S.anchor; $('sPeriod').value = S.period;
-    $('sRow').value = row(); $('sPrev').value = prev();
-    noteUpd();
+    const plan = S.status === 'plan', done = S.status === 'done';
+    $('sName').value = S.name || '';
+    $('setRows').hidden = S.type !== 'rows' || done; $('setMotif').hidden = !isM() || done; $('setStages').hidden = !isSt() || done;
+    $('setMeas').hidden = isM() || plan;
+    $('setEdit').hidden = !(isSt() && S.custom);
+    $('toPlan').hidden = plan || !S.pkey; $('resetStages').hidden = plan;
+    $('finishProj').hidden = plan || done; $('reopen').hidden = !done;
+    $('sRp').value = S.myRp ?? '';
+    const ms = S.meas.slice().reverse();
+    $('measList').innerHTML = ms.length ? ms.map(m => `<li><span>${stamp(m.t)} · ${fmtCm(m.cm)} см${m.stage != null && m.stage >= 0 && stages()[m.stage] ? ' · ' + esc(stages()[m.stage].t) : ''}</span><button class="btn sm" type="button" data-mdel="${m.t}" aria-label="Удалить замер">✕</button></li>`).join('') : '<li class="note">Замеров пока нет.</li>';
+    if (isM()) {
+      $('setMotif').innerHTML = S.parts.map(p => `<h3>${esc(p.name)}</h3>
+        <label>Уже связано <input type="number" inputmode="numeric" min="0" data-k="${p.key}" data-f="made" value="${S.made[p.key] || 0}"></label>
+        <label>Всего нужно <input type="number" inputmode="numeric" min="1" data-k="${p.key}" data-f="goal" value="${p.goal}"></label>`).join('')
+        + '<p>Если часть уже связана до приложения — впиши сколько, счёт продолжится дальше.</p>';
+    } else if (S.type === 'rows') {
+      $('sInc').value = S.inc; $('sAnchor').value = S.anchor; $('sPeriod').value = S.period; $('sTcm').value = S.tcm ?? '';
+      $('sRow').value = row(); $('sPrev').value = prev();
+      noteUpd();
+    }
+    if (isSt() && S.custom) { $('sCrp').value = S.custom.rp ?? ''; $('sEd').innerHTML = edHTML(S.custom.stages); }
   }
+  $('setMotif').addEventListener('change', e => {
+    const el = e.target, p = S.parts.find(x => x.key === el.dataset.k); if (!p) return;
+    const v = parseInt(el.value, 10);
+    if (el.dataset.f === 'made' && Number.isFinite(v) && v >= 0) S.made[p.key] = v;
+    else if (el.dataset.f === 'goal' && Number.isFinite(v) && v >= 1) p.goal = v;
+    else { el.value = el.dataset.f === 'made' ? (S.made[p.key] || 0) : p.goal; return; }
+    save(); render();
+  });
   [['sInc', 'inc', 0], ['sAnchor', 'anchor', 1], ['sPeriod', 'period', 0]].forEach(([id, k, min]) => {
     $(id).addEventListener('change', () => { const v = num(id, min); if (v !== null) { S[k] = v; save(); render(); noteUpd(); } else $(id).value = S[k]; });
   });
+  $('sTcm').addEventListener('change', () => { const v = toNum($('sTcm').value); S.tcm = v != null && v > 0 ? v : null; save(); render(); });
+  $('sRp').addEventListener('change', () => { const v = toNum($('sRp').value); S.myRp = v != null && v > 0 ? v : null; save(); render(); });
+  $('sCrp').addEventListener('change', () => { const v = toNum($('sCrp').value); S.custom.rp = v != null && v > 0 ? v : null; save(); render(); });
+  $('sEd').addEventListener('click', edClick);
+  $('sEdAdd').addEventListener('click', () => edAdd($('sEd')));
+  $('sEdSave').addEventListener('click', () => {
+    const list = readEd($('sEd'));
+    if (!list.length) { flash('Нужен хотя бы один этап'); return; }
+    applyStages(list); save(); render(); fillSettings(); flash('Этапы сохранены');
+  });
+  $('sName').addEventListener('change', () => { const v = $('sName').value.trim(); if (v) { S.name = v; save(); render(); } else $('sName').value = S.name; });
   $('settings').addEventListener('toggle', () => { if ($('settings').open) fillSettings(); });
+  $('toPlan').addEventListener('click', () => { stop(S, Date.now()); S.status = 'plan'; $('settings').open = false; save(); render(); window.scrollTo(0, 0); });
+  $('finishProj').addEventListener('click', finishProject);
+  $('reopen').addEventListener('click', () => { S.status = 'active'; S.finished = 0; $('settings').open = false; save(); render(); window.scrollTo(0, 0); });
 
   let pending = null;
   const ask = (what, text) => { pending = what; $('confirmT').textContent = text; $('confirm').hidden = false; };
-  $('reset').addEventListener('click', () => ask('rows', 'История рядов сотрётся. Точно?'));
-  $('resetTime').addEventListener('click', () => ask('time', 'Всё время обнулится. Точно?'));
+  $('reset').addEventListener('click', () => { const r = num('sRow', 1), p = num('sPrev', 0); if (r === null || p === null) return; ask('rows', `Перейти к ряду ${r}, на спицах ${st(p)}? История и время останутся.`); });
+  $('resetStages').addEventListener('click', () => ask('stages', 'Отметки этапов и их история сотрутся. Точно?'));
+  $('resetTime').addEventListener('click', () => ask('time', 'Всё время проекта обнулится. Точно?'));
+  $('delProj').addEventListener('click', () => ask('delete', `Удалить «${S.name}» со всей историей?`));
   $('no').addEventListener('click', () => { pending = null; $('confirm').hidden = true; });
   $('yes').addEventListener('click', () => {
-    const now = Date.now();
-    if (pending === 'rows') {
+    const now = Date.now(), what = pending;
+    pending = null; $('confirm').hidden = true;
+    if (what === 'rows') {
       const r = num('sRow', 1), p = num('sPrev', 0);
-      if (r !== null && p !== null) {
-        settle(now);
-        S.startRow = r; S.startPrev = p; S.done = []; S.cur = 0; S.rowStart = active(now);
-        $('settings').open = false; window.scrollTo({top: 0});
-      }
-    } else if (pending === 'time') {
+      if (r !== null && p !== null) { settle(S, now); jumpTo(r, p, now); $('settings').open = false; window.scrollTo({top:0}); }
+    } else if (what === 'stages') {
+      settle(S, now);
+      S.st = 0; S.srows = {}; S.sdone = []; S.done = []; S.rowStart = active(S, now);
+      $('settings').open = false; window.scrollTo({top:0});
+    } else if (what === 'time') {
       S.total = 0; S.run = null; S.last = 0; S.rowStart = 0; S.began = 0;
       S.done.forEach(d => { delete d.ms; });
+    } else if (what === 'delete' && P.projects.length > 1) {
+      const gone = S.id;
+      P.projects = P.projects.filter(p => p.id !== gone);
+      (MY[gone] || []).forEach(x => idb.del(x.id).catch(() => {})); delete MY[gone];
+      S = P.projects.find(p => p.status === 'active') || P.projects[0]; P.active = S.id;
+      $('settings').open = false;
+      save(); show('projects'); return;
     }
-    pending = null; $('confirm').hidden = true;
     save(); render(); fillSettings();
+  });
+
+  // покупки
+  $('shopProj').addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.shopsize) { const p = P.projects.find(x => x.id === t.dataset.shopsize); if (!p || t.value === '') return; p.size = +t.value; p.inShop = true; save(); renderShop(); return; }
+    const p = P.projects.find(x => x.id === t.dataset.shop); if (!p) return; p.inShop = t.checked; save(); renderShop();
+  });
+  $('toolList').addEventListener('change', e => { const t = e.target.dataset.tool; if (t == null) return; if (e.target.checked) P.stash.tools[t] = true; else delete P.stash.tools[t]; save(); renderShop(); });
+  $('stashForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const n = $('yN').value.trim(), g = toNum($('yG').value);
+    if (!n || g == null) return;
+    P.stash.yarn.push({id:uid(), n, c:$('yC').value.trim(), g:Math.round(g)});
+    $('stashForm').reset(); $('stashAdd').open = false; save(); renderShop();
+  });
+  $('stashList').addEventListener('change', e => { const s = P.stash.yarn.find(x => x.id === e.target.dataset.sg); if (!s) return; s.g = Math.max(0, Math.round(toNum(e.target.value) || 0)); save(); renderShop(); });
+  $('stashList').addEventListener('click', e => { const b = e.target.closest('button[data-sdel]'); if (!b) return; P.stash.yarn = P.stash.yarn.filter(x => x.id !== b.dataset.sdel); save(); renderShop(); });
+  $('toolForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const t = $('tN').value.trim(); if (!t) return;
+    if (!P.stash.custom.includes(t)) P.stash.custom.push(t);
+    P.stash.tools[t] = true; $('tN').value = ''; save(); renderShop();
+  });
+  $('copyBuy').addEventListener('click', async () => {
+    const txt = buyLines().filter(l => !l.ok && l.txt).map(l => '• ' + l.txt).join('\n');
+    if (!txt) { $('buyMsg').textContent = 'Покупать нечего.'; return; }
+    try { await navigator.clipboard.writeText('Купить для вязания:\n' + txt); $('buyMsg').textContent = 'Список скопирован — вставь в Заметки или в сообщение.'; }
+    catch (e) { $('buyMsg').textContent = 'Скопировать не вышло.'; }
+  });
+
+  // ---------- резервная копия ----------
+  const bkMsg = t => { $('bkMsg').textContent = t; };
+  const markExport = () => { P.lastExport = Date.now(); save(); renderProjects(); };
+  async function exportObj(withPhotos) {
+    const o = {app:'vyazanie', ver:VER, saved:Date.now(), data:P};
+    if (withPhotos) {
+      o.photos = {};
+      try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(PH)) o.photos[k.slice(PH.length)] = localStorage.getItem(k); } } catch (e) {}
+      o.mine = Object.values(MY).flat();
+    }
+    return o;
+  }
+  const summary = d => d.projects.filter(p => !p.status || p.status === 'active').map(p => {
+    if (p.type === 'motifs') return `${p.name}: ${Object.values(p.made || {}).reduce((a, b) => a + b, 0)} мот.`;
+    if (p.type === 'stages') return `${p.name}: этап ${(p.st || 0) + 1}`;
+    return `${p.name}: ряд ${p.done && p.done.length ? p.done[p.done.length - 1].row + 1 : (p.startRow || 1)}`;
+  }).join(' · ');
+  function renderAuto() {
+    const a = autoList().reverse();
+    $('autoList').innerHTML = a.length ? a.map((x, j) => `<li><span>${stamp(x.t)}${x.reason === 'update' ? ' · перед обновлением' : ''}<small>${esc(summary(x.data) || 'без начатых проектов')}</small></span><button class="btn sm" type="button" data-auto="${a.length - 1 - j}">Вернуть</button></li>`).join('')
+      : '<li class="note">Пока нет — появятся сами.</li>';
+  }
+  let bkPending = null;
+  function askRestore(r, label) {
+    bkPending = r;
+    const nPh = Object.keys(r.photos || {}).length + (r.mine || []).length;
+    $('bkConfirmT').textContent = `Заменить всё текущее на копию${label ? ' от ' + label : ''}${nPh ? ` (и ${nPh} фото)` : ''}? ${summary(r.d) || ''}`;
+    $('bkConfirm').hidden = false;
+  }
+  function parseBackup(text) {
+    try { const o = JSON.parse(text); const d = o && o.data ? o.data : o; return valid(d) ? {d, t:o.saved, photos:o.photos || null, mine:o.mine || null} : null; } catch (e) { return null; }
+  }
+  $('backup').addEventListener('toggle', () => { if ($('backup').open) renderAuto(); });
+  $('bkBannerBtn').addEventListener('click', () => { $('backup').open = true; renderAuto(); $('backup').scrollIntoView({behavior:'smooth'}); });
+  $('bkSave').addEventListener('click', async () => {
+    const txt = JSON.stringify(await exportObj($('bkPh').checked));
+    const name = `vyazanie-kopiya-${new Date().toISOString().slice(0, 10)}.json`;
+    try {
+      for (const type of ['application/json', 'text/plain']) {
+        const file = new File([txt], name, {type});
+        if (navigator.canShare && navigator.canShare({files:[file]})) {
+          await navigator.share({files:[file], title:'Копия: вязание'});
+          markExport(); bkMsg('Копия сохранена.'); return;
+        }
+      }
+    } catch (e) { if (e && e.name === 'AbortError') { bkMsg('Отменено.'); return; } }
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([txt], {type:'application/json'})); a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      markExport(); bkMsg('Файл копии сохранён в «Загрузки». Если ничего не появилось — скопируй копию как текст.');
+    } catch (e) { bkMsg('Сохранить файл не получилось — скопируй копию как текст.'); }
+  });
+  $('bkCopy').addEventListener('click', async () => {
+    const txt = JSON.stringify(await exportObj(false));
+    try { await navigator.clipboard.writeText(txt); markExport(); bkMsg('Скопировано (без фото). Вставь в Заметки и сохрани.'); }
+    catch (e) { $('bkText').value = txt; $('bkText').select(); bkMsg('Скопировать само не вышло — текст копии в поле ниже, скопируй его вручную.'); }
+  });
+  $('bkFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    const r = parseBackup(await f.text());
+    if (!r) { bkMsg('Это не похоже на файл копии.'); return; }
+    askRestore(r, r.t ? stamp(r.t) : '');
+  });
+  $('bkPaste').addEventListener('click', () => {
+    const r = parseBackup($('bkText').value.trim());
+    if (!r) { bkMsg('Не получилось прочитать текст копии.'); return; }
+    askRestore(r, r.t ? stamp(r.t) : '');
+  });
+  $('autoList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-auto]'); if (!b) return;
+    const x = autoList()[+b.dataset.auto]; if (x) askRestore({d:x.data}, stamp(x.t));
+  });
+  $('bkNo').addEventListener('click', () => { bkPending = null; $('bkConfirm').hidden = true; });
+  $('bkYes').addEventListener('click', async () => {
+    if (!bkPending) return;
+    const r = bkPending;
+    snapshot('auto', P);
+    if (r.photos) for (const [k, v] of Object.entries(r.photos)) putPhoto(k, v);
+    if (r.mine) for (const x of r.mine) { try { await idb.put(x); } catch (e) {} }
+    try { r.d.lastExport = Date.now(); localStorage.setItem(KEY, JSON.stringify(r.d)); } catch (e) { bkMsg('Не хватило места для восстановления.'); return; }
+    location.reload();
   });
 
   function tick() {
     const now = Date.now();
-    if (settle(now)) { save(); render(); } else paintTime(now);
+    if (settle(S, now)) { save(); if (P.view === 'counter') render(); }
+    else if (P.view === 'counter' && S.status === 'active') paintTime(now);
   }
   setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 
-  if (settle(Date.now())) save();
-  render();
+  const now0 = Date.now();
+  P.projects.forEach(p => settle(p, now0));
+  save();
+  show(['projects', 'shop'].includes(P.view) ? P.view : 'counter');
+  loadMine();
 }
 </script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});</script>
