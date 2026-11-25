@@ -46,7 +46,7 @@ main{max-width:480px;margin:0 auto;padding:20px 18px calc(110px + env(safe-area-
 .lbl{color:var(--mute);font-size:13px}
 .rownum{font:700 clamp(28px,9vw,44px)/1.08 Unbounded,sans-serif;margin:4px 0 14px;text-wrap:balance}
 .ofg{font:600 18px Manrope,sans-serif;color:var(--mute);margin-left:6px}
-.badge{display:inline-block;padding:8px 20px;border-radius:999px;background:var(--acc);color:#000;font-weight:700;font-size:20px;transition:background .25s}
+.badge{border:0;font-family:inherit;cursor:pointer;touch-action:manipulation;display:inline-block;padding:8px 20px;border-radius:999px;background:var(--acc);color:#000;font-weight:700;font-size:20px;transition:background .25s}
 .desc{max-width:36ch;margin:0 auto;font-size:16px;text-align:center}
 .desc b{color:var(--acc)}
 .tapwrap{display:grid;place-items:center;margin:24px 0 10px}
@@ -227,7 +227,7 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
   <section class="now">
     <div class="lbl" id="nowLbl">Сейчас вяжешь</div>
     <div class="rownum"><span id="rowLbl">Ряд</span> <span id="rowNum">20</span><span class="ofg" id="ofGoal"></span></div>
-    <div class="badge" id="badge">+2 прибавки</div>
+    <button class="badge" id="badge" type="button" aria-label="Поменять тип этого ряда">+2 прибавки</button>
     <p class="desc" id="desc" hidden></p>
   </section>
 
@@ -794,7 +794,7 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
   const isM = () => S.type === 'motifs';
   const isSt = () => S.type === 'stages';
   const isNo = r => S.period > 0 && (((r - S.anchor) % S.period) + S.period) % S.period === 0;
-  const add = r => isNo(r) ? 0 : S.inc;
+  const add = r => (S.over && S.over[r] != null) ? S.over[r] : (isNo(r) ? 0 : S.inc);
   const lastRowOf = p => p.done.length ? p.done[p.done.length - 1].row : p.startRow - 1;
   const row = () => lastRowOf(S) + 1;
   const nRows = list => list.reduce((a, d) => a + (d.gap ? d.row - d.from + 1 : 1), 0);
@@ -1003,10 +1003,12 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
   function renderRows() {
     const r = row(), a = add(r), t = prev() + a, n = r + 1, an = add(n);
     document.body.classList.toggle('no', a === 0);
-    setLabels({now:'Сейчас вяжешь', lbl:'Ряд', num:r, help:'Нажимай на каждую петлю — ряд закроется сам', undo:'−1 петля', fin:'Ряд готов ✓'});
+    setLabels({now:'Сейчас вяжешь', lbl:'Ряд', num:r, help:'Нажимай на каждую петлю — ряд закроется сам. Ошиблась с прибавками в этом ряду — нажми на плашку.', undo:'−1 петля', fin:'Ряд готов ✓'});
     $('badge').hidden = S.inc === 0;
     $('badge').textContent = a ? pr(a) : 'Без прибавок';
-    $('desc').hidden = true;
+    const ov = S.over && S.over[r] != null;
+    $('desc').hidden = !ov;
+    if (ov) $('desc').innerHTML = `Этот ряд изменён вручную (по схеме ${isNo(r) ? 'он без прибавок' : 'в нём ' + pr(S.inc)}). Нажми на плашку ещё раз, чтобы вернуть.`;
     $('cur').textContent = S.cur;
     $('curSub').textContent = 'из ' + st(t);
     $('ring').style.strokeDashoffset = C * (1 - Math.min(S.cur / (t || 1), 1));
@@ -1460,6 +1462,14 @@ summary{cursor:pointer;color:var(--mute);min-height:44px;display:flex;align-item
   });
 
   $('seg').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; S.part = b.dataset.k; save(); render(); });
+  $('badge').addEventListener('click', () => {
+    if (S.type !== 'rows' || !S.inc) return;
+    const r = row(), def = isNo(r) ? 0 : S.inc, next = add(r) > 0 ? 0 : S.inc;
+    S.over = S.over || {};
+    if (next === def) delete S.over[r]; else S.over[r] = next;
+    save(); render();
+    flash(next ? `Ряд ${r}: ${pr(next)}` : `Ряд ${r}: без прибавок`);
+  });
   $('checks').addEventListener('change', e => { const j = +e.target.dataset.j; if (!S.check[j]) return; S.check[j].ok = e.target.checked; save(); render(); });
   $('stl').addEventListener('click', e => { const b = e.target.closest('button[data-j]'); if (!b) return; S.st = +b.dataset.j; save(); render(); window.scrollTo({top:0, behavior:'smooth'}); });
   document.addEventListener('click', e => {
